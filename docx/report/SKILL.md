@@ -16,7 +16,8 @@ python3 "$S" write content.json [out.docx]   # finished report
 python3 "$S" selfcheck                       # verify the script still works
 ```
 
-Needs `python-docx` (`pip3 install python-docx`).
+Needs `python-docx`. If it is missing the script stops with the install
+command instead of a traceback - run `pip3 install python-docx` and retry.
 
 ## Branding
 

@@ -74,14 +74,15 @@ send anything.
 ```bash
 claude plugin marketplace add https://github.com/winter2897/office-skills
 claude plugin install office-skills
-
-pip3 install python-docx
 ```
 
-One command installs the **whole set** — every skill in the repository, together
+Two lines install the **whole set** — every skill in the repository, together
 with the shared `assets/`, so branding works out of the box. Adding a skill later
 means `claude plugin update office-skills`, not a second install. Restart Claude
 Code to discover them.
+
+The skills need `python-docx`. You do not have to install it up front: the first
+render without it stops with the exact command to run, and the agent runs it.
 
 ### Claude.ai
 

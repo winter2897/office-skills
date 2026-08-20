@@ -17,7 +17,11 @@ import tempfile
 import re
 import sys
 
-from docx import Document
+try:
+    from docx import Document
+except ImportError:                    # the one dependency, and the one fix
+    sys.exit("error: python-docx is not installed. Run:\n\n"
+             "    pip3 install python-docx\n")
 from docx.enum.section import WD_SECTION
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import (WD_ALIGN_VERTICAL, WD_ROW_HEIGHT_RULE,

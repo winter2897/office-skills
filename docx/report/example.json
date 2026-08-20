@@ -1,0 +1,232 @@
+{
+  "lang": "vi",
+  "title": "Tự động nhận diện và binding payload",
+  "object": "Hệ thống UAV 6 khoang payload – GCS / Companion Computer / Payload",
+  "doc_no": "RTR-REP-2026-018",
+  "version": "1.0",
+  "date": "17/08/2026",
+  "prepared_by": "Quân – Trưởng nhóm phần mềm",
+  "reviewed_by": "–",
+  "approved_by": "–",
+  "email": "quan.tran@rtrobotics.me",
+  "classification": "Nội bộ",
+  "revisions": [
+    [
+      "1.0",
+      "17/08/2026",
+      "Phát hành lần đầu – đề xuất thiết kế, chưa hiện thực",
+      "Quân"
+    ],
+    [
+      "1.1",
+      "18/08/2026",
+      "Bổ sung sơ đồ cấu hình khoang, sơ đồ mạng hiện trạng và danh mục payload",
+      "Quân"
+    ],
+    [
+      "1.2",
+      "20/08/2026",
+      "Chốt dải cổng video sau khi khách xác nhận số payload đồng thời",
+      "Quân"
+    ],
+    [
+      "1.3",
+      "25/08/2026",
+      "Thêm mục giám sát rút payload khi đang bay",
+      "Hải"
+    ]
+  ],
+  "abbreviations": [
+    [
+      "GCS",
+      "Ground Control Station",
+      "Trạm điều khiển mặt đất"
+    ],
+    [
+      "UAV",
+      "Unmanned Aerial Vehicle",
+      "Thiết bị bay không người lái"
+    ],
+    [
+      "EEPROM",
+      "Electrically Erasable Programmable Read-Only Memory",
+      "Bộ nhớ chỉ đọc xóa được bằng điện"
+    ],
+    [
+      "mDNS",
+      "Multicast Domain Name System",
+      "Phân giải tên miền quảng bá nội bộ"
+    ],
+    [
+      "DHCP",
+      "Dynamic Host Configuration Protocol",
+      "Giao thức cấp phát địa chỉ động"
+    ]
+  ],
+  "references": [
+    "AirSim Team, AirSim API Documentation, Microsoft Research, 2024.",
+    "RFC 6762, Multicast DNS, IETF, 2013.",
+    "Tài liệu nội bộ RTR-SPEC-2026-004, Chuẩn giao tiếp payload Hera, 2026."
+  ],
+  "sections": [
+    {
+      "heading": "Tổng quan",
+      "blocks": [
+        {
+          "type": "para",
+          "text": "Tài liệu mô tả phương án tự động nhận diện và binding payload cho hệ thống UAV 6 khoang. Mục tiêu là loại bỏ bước cấu hình thủ công khi thay payload ngoài hiện trường, đồng thời chuẩn hóa luồng video và luồng điều khiển giữa GCS, companion computer và payload. Phương án được đánh giá khả thi với phần cứng hiện có, chi tiết các mức triển khai xem Bảng 4.1."
+        }
+      ]
+    },
+    {
+      "heading": "Hiện trạng",
+      "blocks": [
+        {
+          "type": "bullets",
+          "items": [
+            "Mỗi payload đang phải gán địa chỉ IP tĩnh bằng tay trước khi lắp lên máy bay.",
+            "Luồng video và luồng điều khiển đi chung một dải cổng, khó tách khi có nhiều payload.",
+            [
+              "Không có cơ chế phát hiện payload bị rút ra khi đang bay."
+            ]
+          ]
+        },
+        {
+          "type": "figure",
+          "caption": "Kiến trúc mạng hiện tại"
+        }
+      ]
+    },
+    {
+      "heading": "Phương án đề xuất",
+      "sections": [
+        {
+          "heading": "Nhận diện payload qua EEPROM",
+          "blocks": [
+            {
+              "type": "para",
+              "text": "Mỗi payload mang một EEPROM chứa mã định danh và bảng năng lực. Companion computer đọc EEPROM khi phát hiện kết nối vật lý, sau đó cấp phát địa chỉ và cổng tương ứng. Thông số giao tiếp trình bày tại phần dưới."
+            },
+            {
+              "type": "kv",
+              "label_width": 3200,
+              "rows": [
+                [
+                  "Giao tiếp",
+                  "I2C, 400 kHz"
+                ],
+                [
+                  "Dung lượng",
+                  "4 KB"
+                ],
+                [
+                  "Thời gian nhận diện",
+                  "< 200 ms"
+                ]
+              ]
+            },
+            {
+              "type": "figure",
+              "caption": "Sơ đồ khối quá trình nhận diện payload"
+            }
+          ]
+        },
+        {
+          "heading": "Binding động",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "Companion computer đóng vai trò DHCP server nội bộ cho dải payload.",
+                "Mỗi payload nhận một cổng video và một cổng điều khiển riêng, công bố qua bản tin mDNS."
+              ]
+            },
+            {
+              "type": "para",
+              "text": "Cổng được cấp phát theo công thức sau, với n là chỉ số khoang payload:"
+            },
+            {
+              "type": "equation",
+              "text": "port_video(n) = 5600 + 2n,   port_ctrl(n) = 5601 + 2n"
+            },
+            {
+              "type": "para",
+              "text": "Cấu hình nằm trong `/etc/rtr/payload.json`, nạp lại bằng `systemctl reload rtr-gcs`. Mẫu cho khoang số 1 xem Đoạn mã 1."
+            },
+            {
+              "type": "code",
+              "language": "json",
+              "caption": "Cấu hình khoang số 1",
+              "text": "{\n  \"bay\": 1,\n  \"video_port\": 5602,\n  \"ctrl_port\": 5603,\n  \"mdns\": \"_rtr-payload._udp\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Kế hoạch triển khai",
+      "blocks": [
+        {
+          "type": "table",
+          "caption": "Các mức triển khai và thời gian ước tính",
+          "header": [
+            "Mức",
+            "Hạng mục",
+            "Điều kiện",
+            "Công việc",
+            "Thời gian dự kiến",
+            "Tham chiếu"
+          ],
+          "widths": [
+            900,
+            2000,
+            1700,
+            2038,
+            1400,
+            1600
+          ],
+          "rows": [
+            [
+              "1",
+              "Đọc EEPROM",
+              "Có mẫu payload",
+              "Driver I2C + bảng định danh",
+              "2 tuần",
+              "[3]"
+            ],
+            [
+              "2",
+              "Cấp phát IP",
+              "Xong mức 1",
+              "DHCP nội bộ + mDNS",
+              "1 tuần",
+              "[2]"
+            ],
+            [
+              "3",
+              "Giám sát rút payload",
+              "Xong mức 2",
+              "Heartbeat 1 Hz",
+              "1 tuần",
+              "–"
+            ]
+          ]
+        },
+        {
+          "type": "para",
+          "text": "Tổng thời gian ước tính 4 tuần cho một kỹ sư phần mềm toàn thời gian."
+        }
+      ]
+    },
+    {
+      "heading": "Kết luận",
+      "numbered": false,
+      "blocks": [
+        {
+          "type": "para",
+          "text": "Mức 1 và 2 khả thi với phần cứng hiện có, không cần thay đổi khung máy bay. Cần khách hàng xác nhận số lượng payload tối đa chạy đồng thời trước khi chốt dải cổng."
+        }
+      ]
+    }
+  ]
+}

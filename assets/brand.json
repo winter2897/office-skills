@@ -1,0 +1,13 @@
+{
+  "company": "RTROBOTICS",
+  "logo": "logo.png",
+  "mark": "logo-mark.png",
+  "logo_box_cm": [2.9, 1.2],
+  "mark_box_cm": [1.6, 1.6],
+  "cover_bg": "F4F4F4",
+  "ink": "1A1A1A",
+  "lang": "en",
+  "font": "Times New Roman",
+  "doc_no_example": "RTR-REP-2026-014",
+  "email_example": "quan.tran@rtrobotics.me"
+}

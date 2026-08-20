@@ -1,0 +1,14 @@
+{
+  "name": "office-skills",
+  "description": "Document skills that render Word files on your own company template",
+  "owner": {"name": "Hai Quan Tran"},
+  "plugins": [
+    {
+      "name": "office-skills",
+      "description": "Generate professional office documents on your own company template",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {"name": "Hai Quan Tran"}
+    }
+  ]
+}

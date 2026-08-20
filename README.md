@@ -72,19 +72,20 @@ send anything.
 ### Claude Code
 
 ```bash
-git clone https://github.com/winter2897/office-skills.git ~/.office-skills
-ln -s ~/.office-skills/docx/report ~/.claude/skills/docx-report
+claude plugin marketplace add https://github.com/winter2897/office-skills
+claude plugin install office-skills
 
 pip3 install python-docx
 ```
 
-Symlink each skill you want into `~/.claude/skills/`. The skills resolve their
-own real path, so they still find the shared `assets/` in the cloned repository.
-Restart Claude Code to discover them.
+One command installs the **whole set** — every skill in the repository, together
+with the shared `assets/`, so branding works out of the box. Adding a skill later
+means `claude plugin update office-skills`, not a second install. Restart Claude
+Code to discover them.
 
 ### Claude.ai
 
-Skills upload one directory at a time and cannot reach a shared `assets/`, so
+Skills upload one directory at a time and cannot reach the shared `assets/`, so
 copy the branding in before zipping:
 
 ```bash
@@ -152,7 +153,14 @@ Every skill ships a self-check. Run it before opening a pull request:
 
 ```bash
 python3 docx/report/scripts/report.py selfcheck
+claude plugin validate . --strict
 ```
+
+A new skill is a directory with a `SKILL.md` under its format group, plus one
+line in the `skills` array of [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)
+so it ships with the bundle. The path is listed explicitly rather than scanning
+the group, because that is what makes the `name:` in the skill's frontmatter the
+name it is invoked by.
 
 It renders both modes and the worked example, then asserts the fonts, the
 language tag, the caption fields, the generated lists, the page breaks, the brand

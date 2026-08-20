@@ -1,0 +1,24 @@
+{
+  "name": "office-skills",
+  "description": "Generate professional office documents on your own company template. Word reports with cover page, auto-numbered headings, contents, figure and table captions, and branding from a single assets/brand.json.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Hai Quan Tran"
+  },
+  "homepage": "https://github.com/winter2897/office-skills",
+  "repository": "https://github.com/winter2897/office-skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "docx",
+    "word",
+    "document",
+    "report",
+    "template",
+    "branding",
+    "office"
+  ],
+  "skills": [
+    "./docx/report"
+  ]
+}

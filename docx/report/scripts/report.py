@@ -28,7 +28,9 @@ from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import Cm, Pt, RGBColor, Twips
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+# realpath, not abspath: the usual install symlinks this skill into
+# ~/.claude/skills, and the shared assets/ sits above the real file.
+HERE = os.path.dirname(os.path.realpath(__file__))
 EXAMPLE = os.path.join(os.path.dirname(HERE), "example.json")
 
 

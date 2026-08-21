@@ -9,6 +9,7 @@ Document skills for AI coding agents. Plug into your favorite AI coding tool and
 | Skill | Description | Status |
 |-------|-------------|--------|
 | `docx/report` | Technical, integration and feasibility reports as `.docx`. Cover page, document-control table, revision history, auto-numbered headings, table of contents, list of figures and tables, `SEQ`-numbered figure / table / listing captions, abbreviations, references, styled tables, running header and footer. Writes Vietnamese or English from the same schema. | Available |
+| `docx/test` | Test reports, qualification reports and test records. The seven-section engineering structure — purpose, system configuration, items tested / not tested, approach, PASS/FAIL criteria, results, conclusions. Flat layout: no cover, no contents list, straight into section 1, the way a bench document is read. | Available |
 | `docx/sop` | Standard operating procedures. | Planned |
 | `docx/manual` | User and maintenance manuals. | Planned |
 | `docx/plan` | Project and test plans. | Planned |
@@ -16,7 +17,9 @@ Document skills for AI coding agents. Plug into your favorite AI coding tool and
 | `docx/specs` | Requirement and interface specifications. | Planned |
 
 Every skill reads the same branding, so a company sets its logo once and each
-document type comes out matching.
+document type comes out matching. They share one renderer too: `docx/test` is
+the report renderer with `"layout": "simple"` and a different section skeleton,
+not a second copy of the code.
 
 ## Branding
 
@@ -95,6 +98,9 @@ cp -R office-skills/assets office-skills/docx/report/assets
 cd office-skills/docx && zip -r docx-report.zip report
 ```
 
+`docx/test` renders through the report script, so it cannot be uploaded on its
+own — zip `report/` and use the test skill's `example.json` as the shape.
+
 Settings → Capabilities → Skills → Upload skill. Code execution must be enabled.
 
 ### Manual
@@ -159,7 +165,9 @@ claude plugin validate . --strict
 
 A new skill is a directory with a `SKILL.md` under its format group, plus one
 line in the `skills` array of [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)
-so it ships with the bundle. The path is listed explicitly rather than scanning
+so it ships with the bundle. Prefer reusing an existing renderer over adding a
+second one, the way `docx/test` does — a skill can be nothing but a `SKILL.md`
+and a worked example. The path is listed explicitly rather than scanning
 the group, because that is what makes the `name:` in the skill's frontmatter the
 name it is invoked by.
 

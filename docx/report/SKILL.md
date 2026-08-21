@@ -125,6 +125,7 @@ Do **not** hand-edit the .docx afterwards – change the JSON and re-run.
   "date": "17/08/2026",
   "prepared_by": "Tên – Chức danh",
   "email": "name@company.com",
+  "tested_by": "",
   "reviewed_by": "", "approved_by": "",
   "classification": "Nội bộ",
   "revisions": [["1.0", "17/08/2026", "Phát hành lần đầu", "HQT"]],
@@ -159,6 +160,27 @@ Consolas.
 shows only `title`, `version`, the month of `date`, and the author block
 (`prepared_by` + `email`); every other field prints on page i. Full worked
 example: `example.json`.
+
+### Layout
+
+`"layout": "formal"` (the default) is the document described here: cover page,
+document-control page, roman front matter, a contents list, and a new page for
+every top-level section.
+
+`"layout": "simple"` drops all of it. The document opens with the title, the
+author, `tested_by` if set, and the revision table, then goes straight into
+section 1. One section, page numbers from 1, sections flow without a page break,
+level-1 headings keep their sentence case, and the contents and figure/table
+lists default to off — pass `"toc": true` to bring one back. The styles,
+branding, header, footer, auto-numbered headings and `SEQ` captions are
+unchanged, so a flat document is the same template, not a different one.
+
+Use it for anything read at a bench rather than filed: see the
+[`docx-test`](../test/SKILL.md) skill, which is this renderer with the simple
+layout and a fixed seven-section skeleton.
+
+`tested_by` names whoever ran a test, which is often not whoever wrote the
+document up. Left empty it prints nowhere.
 
 ### Sections
 

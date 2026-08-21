@@ -36,6 +36,10 @@ from docx.shared import Cm, Pt, RGBColor, Twips
 # ~/.claude/skills, and the shared assets/ sits above the real file.
 HERE = os.path.dirname(os.path.realpath(__file__))
 EXAMPLE = os.path.join(os.path.dirname(HERE), "example.json")
+# The sibling skills that render through this script. Their JSON is
+# documentation, and documentation drifts, so selfcheck builds it too.
+SIBLINGS = [os.path.join(os.path.dirname(os.path.dirname(HERE)), "test", name)
+            for name in ("skeleton.json", "example.json")]
 
 
 def find_assets(start=HERE, levels=3):
@@ -98,6 +102,7 @@ BRAND_DEFAULTS = {
     "email_example": "name@company.com",
 }
 BRAND = dict(BRAND_DEFAULTS)   # per document; build() reloads it
+UPPER_H1 = True                # formal layout shouts level 1; simple does not
 
 CONTENT_W = 9638  # twips, A4 minus 2cm margins each side
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
@@ -113,6 +118,7 @@ LABELS = {
         "version": "Phiên bản",
         "date": "Ngày ban hành",
         "prepared_by": "Người lập",
+        "tested_by": "Người thực hiện thử nghiệm",
         "reviewed_by": "Người kiểm tra",
         "approved_by": "Người phê duyệt",
         "classification": "Mức bảo mật",
@@ -120,6 +126,7 @@ LABELS = {
         "doc_control": "THÔNG TIN TÀI LIỆU",
         "author": "Tác giả",
         "revision_history": "LỊCH SỬ PHIÊN BẢN",
+        "revisions": "Lịch sử phiên bản",
         "rev": "Phiên bản",
         "rev_date": "Ngày",
         "rev_desc": "Nội dung thay đổi",
@@ -148,6 +155,7 @@ LABELS = {
         "version": "Version",
         "date": "Date",
         "prepared_by": "Prepared by",
+        "tested_by": "Testing conducted by",
         "reviewed_by": "Reviewed by",
         "approved_by": "Approved by",
         "classification": "Classification",
@@ -155,6 +163,7 @@ LABELS = {
         "doc_control": "DOCUMENT INFORMATION",
         "author": "Author",
         "revision_history": "REVISION HISTORY",
+        "revisions": "Revisions",
         "rev": "Rev",
         "rev_date": "Date",
         "rev_desc": "Description",
@@ -1006,11 +1015,11 @@ def build_abbreviations(doc, rows, meta, page_break):
     grid_table(doc, header, rows, widths)
 
 
-def build_references(doc, entries, meta, bookmark_name=None):
+def build_references(doc, entries, meta, bookmark_name=None, page_break=True):
     """Tài liệu tham khảo – numbered so prose can cite [1], [2]."""
     heading = doc.add_paragraph(h1_case(meta["_labels"]["references_title"], 1),
                                 style="Heading 1 Unnumbered")
-    heading.paragraph_format.page_break_before = True
+    heading.paragraph_format.page_break_before = page_break
     if bookmark_name:
         bookmark(heading, bookmark_name)
     for i, entry in enumerate(entries, start=1):
@@ -1197,13 +1206,17 @@ def render_blocks(doc, blocks, ctx):
 
 
 def h1_case(text, level):
-    """Top-level headings print upper case.
+    """Top-level headings print upper case, except in the simple layout.
 
     As text, not as the w:caps effect: Google Docs has no all-caps run format
     and turns w:caps into small caps on import. Word's rebuilt contents list
-    copies the heading text, so build_toc has to shout the same entries back.
+    copies the heading text, so build_toc has to shout the same entries back -
+    which is why this is one function and not an upper() at each call site.
+
+    A flat document is read straight through, and shouting every section title
+    at a reader who never left the page is noise.
     """
-    return text.upper() if level == 1 else text
+    return text.upper() if level == 1 and UPPER_H1 else text
 
 
 def render_sections(doc, sections, ctx, level=1, numbered_branch=True):
@@ -1217,7 +1230,7 @@ def render_sections(doc, sections, ctx, level=1, numbered_branch=True):
             # Every top-level section opens a page. Not the first one: it already
             # sits at the top of the body section, and a break there would leave
             # a blank page behind.
-            if ctx["opened_body"]:
+            if ctx["opened_body"] and ctx["page_per_section"]:
                 p.paragraph_format.page_break_before = True
             ctx["opened_body"] = True
         bookmark(p, next(ctx["headings"]))
@@ -1334,6 +1347,31 @@ def build_cover(doc, meta):
     place_logo(p, brand_asset("mark"), BRAND["mark_box_cm"], "cover mark")
 
 
+def build_simple_head(doc, meta, revisions):
+    """Title, who wrote it, who ran it, revisions - and straight into section 1.
+
+    A test record is read at a bench, not filed: no cover, no control page, no
+    roman front matter. The styles, the branding and the numbering are the same
+    ones the formal layout uses; only the furniture around them is gone.
+    """
+    L = meta["_labels"]
+    title = doc.add_paragraph(meta["title"], style="Title")
+    title.paragraph_format.space_after = Pt(10)
+    for label, value in ((L["prepared_by"], meta["prepared_by"]),
+                         (L["tested_by"], meta["tested_by"]),
+                         (L["date"], meta["date"]),
+                         (L["doc_no"], meta["doc_no"])):
+        if value:
+            p = para(doc, after=0)
+            rich_text(p, "%s: " % label, bold=True, size=11)
+            rich_text(p, value, size=11)
+    if revisions:
+        para(doc, L["revisions"], size=11, bold=True, before=12, after=6)
+        grid_table(doc, [L["rev_date"], L["rev_author"], L["rev_desc"], L["rev"]],
+                   [[r[1], r[3], r[2], r[0]] for r in revisions],
+                   [1800, 1800, 4238, 1800])
+
+
 def build_doc_control(doc, meta):
     """The identity fields the cover no longer carries – first thing on page 2."""
     L = meta["_labels"]
@@ -1344,6 +1382,7 @@ def build_doc_control(doc, meta):
         (L["version"], meta["version"]),
         (L["date"], meta["date"]),
         (L["prepared_by"], meta["prepared_by"]),
+    ] + ([(L["tested_by"], meta["tested_by"])] if meta["tested_by"] else []) + [
         (L["reviewed_by"], meta["reviewed_by"]),
         (L["approved_by"], meta["approved_by"]),
         (L["classification"], meta["classification"]),
@@ -1414,6 +1453,7 @@ META_DEFAULTS = {
     "version": "1.0",
     "date": "",
     "prepared_by": "",
+    "tested_by": "",           # a test report names who ran it, not only who wrote it
     "reviewed_by": "",
     "approved_by": "",
     "email": "",
@@ -1424,7 +1464,8 @@ META_DEFAULTS = {
 
 # Every key the schema knows. A typo used to be dropped without a word and
 # print as an empty field halfway down page i.
-SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "brand", "toc", "list_of_figures",
+SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "brand", "layout", "toc",
+                                  "list_of_figures",
                                   "list_of_tables", "abbreviations", "references",
                                   "sections"}
 SECTION_KEYS = {"heading", "numbered", "blocks", "sections"}
@@ -1461,6 +1502,8 @@ def validate(spec):
     unknown(spec.get("brand") or {}, set(BRAND_DEFAULTS), "brand")
     if (spec.get("lang") or BRAND["lang"]) not in LABELS:
         bad("lang must be one of: %s", ", ".join(sorted(LABELS)))
+    if spec.get("layout", "formal") not in ("formal", "simple"):
+        bad("layout must be 'formal' or 'simple', got %r", spec["layout"])
     pick_font(spec.get("font") or BRAND["font"])   # raises on a font Word may lack
 
     for row in spec.get("revisions") or []:
@@ -1516,7 +1559,7 @@ def validate(spec):
 def build(spec, out_path, instructions=False):
     # ponytail: module globals, not parameters threaded through forty calls.
     # One document per process in every real use; selfcheck sets them per build.
-    global FONT, BRAND, INK
+    global FONT, BRAND, INK, UPPER_H1
     BRAND = load_brand(spec)
     validate(spec)
     labels = LABELS[spec.get("lang") or BRAND["lang"]]
@@ -1538,46 +1581,62 @@ def build(spec, out_path, instructions=False):
     set_theme_fonts(doc)
     auto_update_fields(doc)
 
+    # A simple document is one section that starts at page 1: no cover, no
+    # control page, no roman front matter, and generated lists off unless asked.
+    simple = spec.get("layout", "formal") == "simple"
+    lists_on = not simple
+    UPPER_H1 = not simple
+
     plan = plan_document(spec.get("sections", []),
                          labels["references_title"] if spec.get("references") else None)
 
-    # Section 1 – cover. Its header/footer are defined here and inherited by
-    # the later sections; the cover itself is exempt via a blank first page.
-    cover = setup_page(doc.sections[0])
-    cover.different_first_page_header_footer = True
-    build_header(cover, meta)
-    build_footer(cover, meta)
-    build_cover(doc, meta)
-
     abbreviations = spec.get("abbreviations") or []
     revisions = meta.get("revisions") or []
-    front = setup_page(doc.add_section(WD_SECTION.NEW_PAGE))
-    front.different_first_page_header_footer = False
-    page_numbering(front, fmt="lowerRoman", start=1)
 
-    # document control and revision history share page i – both answer "which
-    # document is this", and neither fills a page on its own
-    build_doc_control(doc, meta)
-    if revisions:
-        build_revision_history(doc, revisions, meta)
-    if spec.get("toc", True):
-        build_toc(doc, plan, meta, page_break=True)
-    if plan.figures and spec.get("list_of_figures", True):
+    if simple:
+        body = setup_page(doc.sections[0])
+        build_header(body, meta)
+        build_footer(body, meta)
+        build_simple_head(doc, meta, revisions)
+    else:
+        # Section 1 – cover. Its header/footer are defined here and inherited by
+        # the later sections; the cover itself is exempt via a blank first page.
+        cover = setup_page(doc.sections[0])
+        cover.different_first_page_header_footer = True
+        build_header(cover, meta)
+        build_footer(cover, meta)
+        build_cover(doc, meta)
+
+        front = setup_page(doc.add_section(WD_SECTION.NEW_PAGE))
+        front.different_first_page_header_footer = False
+        page_numbering(front, fmt="lowerRoman", start=1)
+
+        # document control and revision history share page i – both answer "which
+        # document is this", and neither fills a page on its own
+        build_doc_control(doc, meta)
+        if revisions:
+            build_revision_history(doc, revisions, meta)
+
+    if spec.get("toc", lists_on):
+        build_toc(doc, plan, meta, page_break=not simple)
+    if plan.figures and spec.get("list_of_figures", lists_on):
         build_caption_list(doc, plan.figures, labels["lof_title"],
-                           labels["figure"], page_break=True)
-    if plan.tables and spec.get("list_of_tables", True):
+                           labels["figure"], page_break=not simple)
+    if plan.tables and spec.get("list_of_tables", lists_on):
         build_caption_list(doc, plan.tables, labels["lot_title"],
-                           labels["table"], page_break=True)
+                           labels["table"], page_break=not simple)
     if abbreviations:
-        build_abbreviations(doc, abbreviations, meta, page_break=True)
+        build_abbreviations(doc, abbreviations, meta, page_break=not simple)
 
-    body = setup_page(doc.add_section(WD_SECTION.NEW_PAGE))
-    body.different_first_page_header_footer = False
-    page_numbering(body, fmt="decimal", start=1)
+    if not simple:
+        body = setup_page(doc.add_section(WD_SECTION.NEW_PAGE))
+        body.different_first_page_header_footer = False
+        page_numbering(body, fmt="decimal", start=1)
 
     ctx = {
         "labels": labels,
         "opened_body": False,
+        "page_per_section": not simple,
         "headings": iter([h[3] for h in plan.headings]),
         "figures": iter(plan.figures),
         "tables": iter(plan.tables),
@@ -1587,7 +1646,8 @@ def build(spec, out_path, instructions=False):
     render_sections(doc, spec.get("sections", []), ctx)
 
     if spec.get("references"):
-        build_references(doc, spec["references"], meta, next(ctx["headings"], None))
+        build_references(doc, spec["references"], meta, next(ctx["headings"], None),
+                         page_break=not simple)
     if instructions:
         build_instructions(doc)
 
@@ -1741,6 +1801,10 @@ def _selfcheck():
         # the shipped example is documentation, and documentation drifts
         with open(EXAMPLE, encoding="utf-8") as fh:
             build(json.load(fh), os.path.join(tmp, "x.docx"))
+        for i, sib in enumerate(SIBLINGS):
+            if os.path.exists(sib):
+                with open(sib, encoding="utf-8") as fh:
+                    build(json.load(fh), os.path.join(tmp, "sib%d.docx" % i))
 
         for path in (t, r):
             names = {s.name for s in _D(path).styles}
@@ -1865,6 +1929,32 @@ def _selfcheck():
         etexts = [p.text for p in e.paragraphs]
         assert "TABLE OF CONTENTS" in etexts, etexts
         assert any(t.startswith("Figure") for t in etexts), etexts
+
+        # the simple layout drops the furniture and keeps the styles
+        flat = build(dict(spec, layout="simple"), os.path.join(tmp, "flat.docx"))
+        fd = _D(flat)
+        ftexts = [p.text for p in fd.paragraphs]
+        assert len(fd.sections) == 1, "simple layout should be a single section"
+        assert ftexts[0] == "Check", ftexts[:3]           # title, no cover before it
+        assert "THÔNG TIN TÀI LIỆU" not in ftexts, "control page survived"
+        assert "MỤC LỤC" not in ftexts, "contents should default off when flat"
+        assert "One" in ftexts and "ONE" not in ftexts, "flat headings should not shout"
+        assert fd.tables[0].cell(0, 0).text == "Ngày", fd.tables[0].cell(0, 0).text
+        with zipfile.ZipFile(flat) as z:
+            fxml = z.read("word/document.xml").decode()
+            assert "<w:pageBreakBefore/>" not in fxml, "flat sections must not break"
+            assert "<wp:anchor" not in fxml, "cover ground survived into a flat document"
+            assert "lowerRoman" not in fxml, "flat documents number from 1"
+            assert "SEQ Bảng" in fxml, "captions still number themselves when flat"
+        # the lists are off by default, not unavailable
+        assert "MỤC LỤC" in [p.text for p in
+                             _D(build(dict(spec, layout="simple", toc=True),
+                                      os.path.join(tmp, "flat2.docx"))).paragraphs]
+        try:
+            validate(dict(spec, layout="fancy"))
+            raise AssertionError("validate accepted an unknown layout")
+        except ValueError:
+            pass
 
         # a brand reaches the cover, the footer and the document properties
         b = build(dict(spec, brand={"company": "ACME Corp"}),

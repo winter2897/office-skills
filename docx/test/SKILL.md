@@ -27,7 +27,7 @@ test document does differently.
 ```json
 {
   "layout": "simple",
-  "page": "letter",
+  "page": "a4",
   "font": "Arial",
   "body_pt": 11,
   "document_type": "Test Document",
@@ -44,7 +44,7 @@ test document does differently.
 | Key | Why |
 |---|---|
 | `"layout": "simple"` | **Required.** No cover, no control page, no roman front matter; sections do not each start a page; headings keep sentence case and lose the rule under them; the title is set at heading weight with a `TITLE:` prefix; contents and figure/table lists default off |
-| `"page": "letter"`, `"font": "Arial"`, `"body_pt": 11` | **The defaults for this skill.** A test document is Arial 11 pt on Letter, not the Times New Roman 13 pt on A4 that a formal report uses. Carry all three; on Letter a table's `widths` must add up to **9405** twips, not 9638 |
+| `"font": "Arial"`, `"body_pt": 11` | **The defaults for this skill.** A test document is Arial 11 pt, not the Times New Roman 13 pt a formal report uses. `"page": "a4"` is the default and is carried explicitly so a test document does not silently change sheet |
 | `document_type` | Prints in the header as `TEST DOCUMENT: <doc_no>`. Keep it `Test Document` |
 | `project` | Prints in the header as `Project Reference: <project>` |
 | `tested_by` | Who ran the test, which is often not who wrote it up |
@@ -101,8 +101,8 @@ sentence in section 2, one in section 5 and one in section 7.
    captions number themselves; never type a number into one.
 5. **Do not add a cover page or a contents list** by switching `layout` back to
    `formal`. If someone wants the formal furniture they want the report skill.
-6. **Do not drop `page`, `font` or `body_pt`.** Losing them silently reverts the
-   document to A4 Times New Roman 13 pt, which no longer matches the format.
+6. **Do not drop `font` or `body_pt`.** Losing them silently reverts the document
+   to Times New Roman 13 pt, which no longer matches the format.
 
 ## Language
 

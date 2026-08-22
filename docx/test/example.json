@@ -1,6 +1,6 @@
 {
   "layout": "simple",
-  "page": "letter",
+  "page": "a4",
   "font": "Arial",
   "body_pt": 11,
   "lang": "en",
@@ -45,7 +45,7 @@
         {"type": "table",
          "caption": "Test scope",
          "header": ["Item to Test", "Test Overview", "Responsibility"],
-         "widths": [2500, 4905, 2000],
+         "widths": [2600, 5038, 2000],
          "rows": [
            ["Characterisation", "Power, RPM and current against PWM, full range", "Test Eng."],
            ["Step response", "Acceleration and deceleration, 1150 to 1950 µs", "Test Eng."],
@@ -70,7 +70,7 @@
         {"type": "table",
          "caption": "Stimulus waveforms",
          "header": ["Name", "Purpose", "Definition"],
-         "widths": [2000, 4405, 3000],
+         "widths": [2000, 4638, 3000],
          "rows": [
            ["Pyramid", "Steady-state measurement at each throttle point", "1300 → 1920 → 1300 µs, 50 µs steps, 5 s dwell"],
            ["Step", "Acceleration and deceleration response", "1150 / 1650 / 1950 µs, 10 s dwell"],
@@ -125,7 +125,7 @@
             {"type": "table",
              "caption": "Results against the acceptance criteria",
              "header": ["Test Name", "Test Description", "Pass Criteria", "Result"],
-             "widths": [1900, 3305, 2200, 2000],
+             "widths": [1900, 3538, 2200, 2000],
              "rows": [
                ["Characterisation", "Pyramid, full PWM range", "None, characterisation", "Complete"],
                ["Step response", "Steps 1150 to 1950 µs", "None, characterisation", "Complete"],

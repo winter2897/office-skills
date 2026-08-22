@@ -1,6 +1,6 @@
 {
   "layout": "simple",
-  "page": "letter",
+  "page": "a4",
   "font": "Arial",
   "body_pt": 11,
   "lang": "en",
@@ -41,7 +41,7 @@
         {"type": "table",
          "caption": "{{SCOPE_CAPTION}}",
          "header": ["Item to Test", "Test Overview", "Responsibility"],
-         "widths": [2500, 4905, 2000],
+         "widths": [2600, 5038, 2000],
          "rows": [
            ["{{ITEM_1}}", "{{OVERVIEW_1}}", "{{OWNER_1}}"],
            ["{{ITEM_2}}", "{{OVERVIEW_2}}", "{{OWNER_2}}"],
@@ -62,7 +62,7 @@
         {"type": "table",
          "caption": "{{METHOD_CAPTION}}",
          "header": ["Name", "Purpose", "Definition"],
-         "widths": [2000, 4405, 3000],
+         "widths": [2000, 4638, 3000],
          "rows": [
            ["{{METHOD_1}}", "{{METHOD_PURPOSE_1}}", "{{METHOD_DEFINITION_1}}"],
            ["{{METHOD_2}}", "{{METHOD_PURPOSE_2}}", "{{METHOD_DEFINITION_2}}"]
@@ -107,7 +107,7 @@
             {"type": "table",
              "caption": "{{SUMMARY_CAPTION}}",
              "header": ["Test Name", "Test Description", "Pass Criteria", "Result"],
-             "widths": [1900, 3305, 2200, 2000],
+             "widths": [1900, 3538, 2200, 2000],
              "rows": [
                ["{{TEST_NAME_1}}", "{{DESCRIPTION_1}}", "{{CRITERIA_1}}", "{{PASS_FAIL_OR_NOT_TESTED_1}}"],
                ["{{TEST_NAME_2}}", "{{DESCRIPTION_2}}", "{{CRITERIA_2}}", "{{PASS_FAIL_OR_NOT_TESTED_2}}"],

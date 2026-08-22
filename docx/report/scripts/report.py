@@ -2121,7 +2121,7 @@ def _selfcheck():
             assert sdoc.paragraphs[0].text.startswith("TITLE: "), sib
             hdr = sdoc.sections[0].header.tables[0].rows[0].cells[1].text
             assert hdr.startswith("TEST DOCUMENT: "), (sib, hdr)
-            assert abs(sdoc.sections[0].page_width - Cm(21.59)) < 2000, sib
+            assert abs(sdoc.sections[0].page_width - Cm(21.0)) < 2000, sib
             with zipfile.ZipFile(os.path.join(tmp, "sib%d.docx" % i)) as z:
                 assert "Arial" in z.read("word/styles.xml").decode(), sib
 

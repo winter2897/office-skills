@@ -8,7 +8,7 @@
     {
       "name": "office-skills",
       "description": "Generate professional office documents on your own company template. Word reports and test reports with auto-numbered headings, figure and table captions, and branding from a single assets/brand.json.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "source": "./",
       "author": {
         "name": "Hai Quan Tran"

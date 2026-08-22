@@ -1,35 +1,38 @@
 {
   "layout": "simple",
+  "page": "letter",
+  "font": "Arial",
+  "body_pt": 11,
   "lang": "en",
-  "document_type": "Test Report",
+  "document_type": "Test Document",
   "title": "{{TITLE}}",
   "object": "{{UNIT_UNDER_TEST}}",
   "doc_no": "{{DOC_NO}}",
+  "project": "{{PROJECT}}",
   "version": "{{VERSION}}",
   "date": "{{DATE}}",
-  "prepared_by": "{{PREPARED_BY}}",
+  "prepared_by": "{{AUTHOR}}",
   "tested_by": "{{TESTED_BY}}",
+  "classification": "{{CLASSIFICATION}}",
   "revisions": [["{{VERSION}}", "{{DATE}}", "{{CHANGE_DESCRIPTION}}", "{{CHANGE_AUTHOR}}"]],
   "sections": [
     {
       "heading": "Purpose of Testing",
       "blocks": [
-        {"type": "para", "text": "{{PURPOSE – what is being qualified, the question this test answers, and the deliverable: a limit, a procedure, or a go/no-go.}}"},
-        {"type": "para", "text": "{{DELIVERABLE – what comes out of this test besides the verdict.}}"}
+        {"type": "para", "text": "{{PURPOSE – one or two sentences: what is being qualified and what question the test answers.}}"},
+        {"type": "para", "text": "{{DELIVERABLE – one sentence: the limit, procedure or go/no-go this test produces.}}"}
       ]
     },
     {
       "heading": "System Configuration",
       "blocks": [
-        {"type": "para", "text": "{{CONFIGURATION_INTRO – the thing under test, in one sentence.}}"},
-        {"type": "kv", "label_width": 3200, "rows": [
-          ["{{PART_OR_ASSEMBLY}}", "{{PART_NUMBER}}"],
-          ["{{HARDWARE_REVISION}}", "{{REVISION}}"],
-          ["{{FIRMWARE_VERSION}}", "{{VERSION}}"],
-          ["{{TEST_RIG}}", "{{RIG_DESCRIPTION}}"],
+        {"type": "kv", "label_width": 3000, "rows": [
+          ["{{PART}}", "{{PART_NUMBER}}"],
+          ["{{HARDWARE_REV}}", "{{REVISION}}"],
+          ["{{FIRMWARE}}", "{{VERSION}}"],
+          ["{{RIG}}", "{{RIG_DESCRIPTION}}"],
           ["{{INSTRUMENTATION}}", "{{INSTRUMENTS_AND_RANGES}}"]
-        ]},
-        {"type": "figure", "placeholder": "[ {{INSERT_SETUP_PHOTO_OR_DIAGRAM}} ]", "caption": "{{SETUP_CAPTION}}"}
+        ]}
       ]
     },
     {
@@ -38,20 +41,19 @@
         {"type": "table",
          "caption": "{{SCOPE_CAPTION}}",
          "header": ["Item to Test", "Test Overview", "Responsibility"],
-         "widths": [2600, 5038, 2000],
+         "widths": [2500, 4905, 2000],
          "rows": [
            ["{{ITEM_1}}", "{{OVERVIEW_1}}", "{{OWNER_1}}"],
            ["{{ITEM_2}}", "{{OVERVIEW_2}}", "{{OWNER_2}}"],
            ["{{ITEM_3}}", "{{OVERVIEW_3}}", "{{OWNER_3}}"]
          ]},
-        {"type": "para", "text": "{{NOT_TESTED – what is deliberately out of scope and why. Do not leave this out.}}"}
+        {"type": "para", "text": "Not tested: {{OUT_OF_SCOPE}} – {{WHERE_IT_IS_COVERED_INSTEAD}}."}
       ]
     },
     {
       "heading": "Test Approach",
       "blocks": [
-        {"type": "para", "text": "{{APPROACH_INTRO}}"},
-        {"type": "para", "text": "The following quantities are measured throughout:"},
+        {"type": "para", "text": "Measured throughout:"},
         {"type": "bullets", "items": [
           "{{MEASURED_QUANTITY_1}}",
           "{{MEASURED_QUANTITY_2}}",
@@ -60,45 +62,43 @@
         {"type": "table",
          "caption": "{{METHOD_CAPTION}}",
          "header": ["Name", "Purpose", "Definition"],
-         "widths": [2000, 4638, 3000],
+         "widths": [2000, 4405, 3000],
          "rows": [
            ["{{METHOD_1}}", "{{METHOD_PURPOSE_1}}", "{{METHOD_DEFINITION_1}}"],
            ["{{METHOD_2}}", "{{METHOD_PURPOSE_2}}", "{{METHOD_DEFINITION_2}}"]
          ]},
-        {"type": "para", "text": "{{CONDITIONS – ambient, supply, duration, and any note the reader needs to reproduce the run.}}"}
+        {"type": "para", "text": "{{CONDITIONS – ambient, supply, duration. One line.}}"}
       ]
     },
     {
       "heading": "Test PASS / FAIL Criteria",
       "blocks": [
-        {"type": "para", "text": "{{CRITERIA – state the threshold each test is judged against, or say in one line that the criteria are itemised per test in the approach section.}}"}
+        {"type": "para", "text": "{{CRITERIA – normally one line: itemised per test in Table 1 and repeated with the outcome in the results summary.}}"}
       ]
     },
     {
       "heading": "Test Results",
-      "blocks": [
-        {"type": "para", "text": "{{RESULTS_INTRO}}"}
-      ],
+      "blocks": [],
       "sections": [
         {
           "heading": "{{TEST_NAME_1}}",
           "blocks": [
-            {"type": "para", "text": "{{RESULT_NARRATIVE_1 – what was run, what was measured, what it means. Every number with its unit and its condition.}}"},
-            {"type": "figure", "placeholder": "[ {{INSERT_RESULT_PLOT}} ]", "caption": "{{RESULT_FIGURE_CAPTION_1}}"}
+            {"type": "para", "text": "{{RESULT_1 – the measurement and what it means. Numbers carry units and conditions.}}"},
+            {"type": "figure", "placeholder": "[ {{INSERT_PLOT}} ]", "caption": "{{FIGURE_CAPTION_1}}"}
           ]
         },
         {
           "heading": "{{TEST_NAME_2}}",
           "blocks": [
-            {"type": "para", "text": "{{RESULT_NARRATIVE_2}}"}
+            {"type": "para", "text": "{{RESULT_2}}"}
           ]
         },
         {
           "heading": "{{FAILURE_NAME – delete this subsection if nothing failed}}",
           "blocks": [
-            {"type": "para", "text": "{{FAILURE_WHAT_HAPPENED – when it failed, at what point in the run, and the measurement that shows it.}}"},
-            {"type": "para", "text": "{{FAILURE_EVIDENCE – disassembly, log excerpt, or instrument trace.}}"},
-            {"type": "para", "text": "{{FAILURE_ROOT_CAUSE – the cause if known, or what still has to be done to find it.}}"}
+            {"type": "para", "text": "{{WHAT_FAILED – the event and the measurement that shows it.}}"},
+            {"type": "para", "text": "Root cause: {{ROOT_CAUSE}}."},
+            {"type": "para", "text": "Action: {{FIX_OR_NEXT_STEP}}."}
           ]
         },
         {
@@ -107,11 +107,11 @@
             {"type": "table",
              "caption": "{{SUMMARY_CAPTION}}",
              "header": ["Test Name", "Test Description", "Pass Criteria", "Result"],
-             "widths": [2000, 3438, 2200, 2000],
+             "widths": [1900, 3305, 2200, 2000],
              "rows": [
-               ["{{TEST_NAME_1}}", "{{TEST_DESCRIPTION_1}}", "{{PASS_CRITERIA_1}}", "{{PASS_FAIL_OR_NOT_TESTED_1}}"],
-               ["{{TEST_NAME_2}}", "{{TEST_DESCRIPTION_2}}", "{{PASS_CRITERIA_2}}", "{{PASS_FAIL_OR_NOT_TESTED_2}}"],
-               ["{{TEST_NAME_3}}", "{{TEST_DESCRIPTION_3}}", "{{PASS_CRITERIA_3}}", "{{PASS_FAIL_OR_NOT_TESTED_3}}"]
+               ["{{TEST_NAME_1}}", "{{DESCRIPTION_1}}", "{{CRITERIA_1}}", "{{PASS_FAIL_OR_NOT_TESTED_1}}"],
+               ["{{TEST_NAME_2}}", "{{DESCRIPTION_2}}", "{{CRITERIA_2}}", "{{PASS_FAIL_OR_NOT_TESTED_2}}"],
+               ["{{TEST_NAME_3}}", "{{DESCRIPTION_3}}", "{{CRITERIA_3}}", "{{PASS_FAIL_OR_NOT_TESTED_3}}"]
              ]}
           ]
         }
@@ -120,11 +120,11 @@
     {
       "heading": "Conclusions/Recommendations",
       "blocks": [
-        {"type": "para", "text": "{{VERDICT – qualified, qualified with limits, or not qualified. First sentence, no preamble.}}"},
+        {"type": "para", "text": "{{VERDICT – qualified, qualified with limits, or not qualified. One sentence, first.}}"},
         {"type": "bullets", "items": [
-          "{{RECOMMENDATION_1}}",
-          "{{RECOMMENDATION_2}}",
-          "{{OPEN_ITEM – what is still unresolved and who owns it.}}"
+          "{{ACTION_1}}",
+          "{{ACTION_2}}",
+          "{{OPEN_ITEM – what is unresolved and who owns it.}}"
         ]}
       ]
     }

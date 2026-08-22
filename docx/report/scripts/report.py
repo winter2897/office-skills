@@ -72,7 +72,8 @@ FONTS = ["Times New Roman", "Arial", "Calibri", "Cambria", "Georgia", "Tahoma",
 DEFAULT_FONT = FONTS[0]
 FONT = DEFAULT_FONT   # per document; "font" in content.json overrides it
 MONO = "Consolas"
-BODY_PT = 13          # Vietnamese report standard (TT 01/2011/TT-BNV: TNR 13-14pt)
+DEFAULT_BODY_PT = 13  # Vietnamese report standard (TT 01/2011/TT-BNV: TNR 13-14pt)
+BODY_PT = DEFAULT_BODY_PT   # per document; "body_pt" in content.json overrides it
 DASH = "–"            # en dash everywhere; never the longer em dash
 
 INK = RGBColor(0x1A, 0x1A, 0x1A)      # logo black
@@ -104,7 +105,24 @@ BRAND_DEFAULTS = {
 BRAND = dict(BRAND_DEFAULTS)   # per document; build() reloads it
 UPPER_H1 = True                # formal layout shouts level 1; simple does not
 
-CONTENT_W = 9638  # twips, A4 minus 2cm margins each side
+# width, height, left, right, top, bottom - centimetres. The generous A4 top
+# margin leaves room for the logo header; Letter keeps the 1 in margins its
+# documents are written to.
+PAGES = {
+    "a4":     (21.0, 29.7, 2.0, 2.0, 3.5, 2.5),
+    "letter": (21.59, 27.94, 2.5, 2.5, 2.5, 2.5),
+}
+PAGE = "a4"       # per document; "page" in content.json overrides it
+TWIPS_PER_CM = 1440 / 2.54
+
+
+def content_width(page):
+    """Twips between the margins - what a table's widths must add up to."""
+    w, _, left, right, _, _ = PAGES[page]
+    return int(round((w - left - right) * TWIPS_PER_CM))
+
+
+CONTENT_W = content_width(PAGE)   # rebuilt by build() from the page
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
 
 # Fixed document furniture. Report prose is Vietnamese by default; set
@@ -146,6 +164,8 @@ LABELS = {
         "listing": "Đoạn mã",
         "hdr_doc_no": "Mã số",
         "hdr_rev": "Phiên bản",
+        "project": "Dự án",
+        "title_prefix": "TIÊU ĐỀ",
     },
     "en": {
         "lang_tag": "en-US",
@@ -183,6 +203,8 @@ LABELS = {
         "listing": "Listing",
         "hdr_doc_no": "Doc. No",
         "hdr_rev": "Rev",
+        "project": "Project Reference",
+        "title_prefix": "TITLE",
     },
 }
 
@@ -603,7 +625,10 @@ def install_styles(doc, lang_tag="vi-VN"):
         tpr.remove(b)
 
     h1 = base("Heading 1", 16, bold=True, before=20, after=8, keep_next=True)
-    borders(h1.element.get_or_add_pPr(), ["bottom"], sz=6)
+    if UPPER_H1:
+        # The rule separates sections that each own a page. Seven of them down
+        # one flowing document is a ladder, not a separation.
+        borders(h1.element.get_or_add_pPr(), ["bottom"], sz=6)
     style_numpr(h1, 0, HEADING_NUMID)
 
     h2 = base("Heading 2", 14, bold=True, before=14, after=6, keep_next=True)
@@ -739,10 +764,11 @@ def auto_update_fields(doc):
 
 # --------------------------------------------------------------------------- page furniture
 def setup_page(section):
-    section.page_width, section.page_height = Cm(21), Cm(29.7)
-    section.left_margin = section.right_margin = Cm(2)
-    section.top_margin = Cm(3.5)
-    section.bottom_margin = Cm(2.5)
+    w, h, left, right, top, bottom = PAGES[PAGE]
+    section.page_width, section.page_height = Cm(w), Cm(h)
+    section.left_margin, section.right_margin = Cm(left), Cm(right)
+    section.top_margin = Cm(top)
+    section.bottom_margin = Cm(bottom)
     section.header_distance = Cm(1.25)
     section.footer_distance = Cm(1.25)
     return section
@@ -808,15 +834,22 @@ def build_header(section, meta):
         set_size(p, 11, INK)
 
     L = meta["_labels"]
-    lines = ["%s: %s" % (L["hdr_doc_no"], meta["doc_no"]),
-             "%s: %s" % (L["hdr_rev"], meta["version"])]
-    for i, text in enumerate(lines):
+    if meta["_simple"]:
+        # a bench document is filed by what it is and what it belongs to, not by
+        # its revision - the revision table is three lines further down the page
+        lines = [(meta["document_type"].upper(), meta["doc_no"]),
+                 (L["project"], meta["project"])]
+    else:
+        lines = [(L["hdr_doc_no"], meta["doc_no"]),
+                 (L["hdr_rev"], meta["version"])]
+    lines = [(label, value) for label, value in lines if value]
+    for i, (label, value) in enumerate(lines):
         pp = c1.paragraphs[0] if i == 0 else c1.add_paragraph()
         pp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         pp.paragraph_format.space_after = Pt(0)
         pp.paragraph_format.line_spacing = 1.0
-        pp.add_run(text)
-        set_size(pp, 9)
+        rich_text(pp, label, bold=True, size=9, color=MUTED)
+        rich_text(pp, ": %s" % value, size=9, color=MUTED)
 
     cell_margins(tbl, bottom=140)
     table_border(tbl, "bottom")
@@ -965,8 +998,16 @@ def wrap_in_field(lines, instr):
 
 
 def front_heading(doc, text, page_break=False):
+    """Centred banner on its own page - or, in a flat document, a plain head.
+
+    A 16 pt centred line halfway down a bench document reads as a mistake: it
+    is the furniture of a page that no longer exists.
+    """
     if page_break:
         doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+    if not UPPER_H1:
+        return para(doc, text.capitalize() if text.isupper() else text,
+                    size=13, bold=True, before=16, after=8)
     return para(doc, text, size=16, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER,
                 after=14)
 
@@ -1355,8 +1396,11 @@ def build_simple_head(doc, meta, revisions):
     ones the formal layout uses; only the furniture around them is gone.
     """
     L = meta["_labels"]
-    title = doc.add_paragraph(meta["title"], style="Title")
-    title.paragraph_format.space_after = Pt(10)
+    # Heading 1 weight, not the cover-sized Title style: the flat document opens
+    # on a line, not on a title page.
+    title = para(doc, "", before=0, after=10)
+    rich_text(title, "%s: %s" % (L["title_prefix"], meta["title"]),
+              bold=True, size=16)
     for label, value in ((L["prepared_by"], meta["prepared_by"]),
                          (L["tested_by"], meta["tested_by"]),
                          (L["date"], meta["date"]),
@@ -1449,6 +1493,7 @@ META_DEFAULTS = {
     "document_type": "",          # falls back to the language's default rubric
     "title": "",           # falls back to the language's default rubric
     "object": "",
+    "project": "",             # the programme the document belongs to
     "doc_no": "",
     "version": "1.0",
     "date": "",
@@ -1464,8 +1509,9 @@ META_DEFAULTS = {
 
 # Every key the schema knows. A typo used to be dropped without a word and
 # print as an empty field halfway down page i.
-SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "brand", "layout", "toc",
-                                  "list_of_figures",
+SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "body_pt", "page", "brand",
+                                  "layout", "toc", "list_of_figures",
+                                  "abbreviations_list",
                                   "list_of_tables", "abbreviations", "references",
                                   "sections"}
 SECTION_KEYS = {"heading", "numbered", "blocks", "sections"}
@@ -1504,6 +1550,10 @@ def validate(spec):
         bad("lang must be one of: %s", ", ".join(sorted(LABELS)))
     if spec.get("layout", "formal") not in ("formal", "simple"):
         bad("layout must be 'formal' or 'simple', got %r", spec["layout"])
+    if spec.get("page", "a4") not in PAGES:
+        bad("page must be one of: %s", ", ".join(sorted(PAGES)))
+    if not 8 <= spec.get("body_pt", BODY_PT) <= 14:
+        bad("body_pt must be between 8 and 14, got %r", spec["body_pt"])
     pick_font(spec.get("font") or BRAND["font"])   # raises on a font Word may lack
 
     for row in spec.get("revisions") or []:
@@ -1559,13 +1609,22 @@ def validate(spec):
 def build(spec, out_path, instructions=False):
     # ponytail: module globals, not parameters threaded through forty calls.
     # One document per process in every real use; selfcheck sets them per build.
-    global FONT, BRAND, INK, UPPER_H1
+    global FONT, BRAND, INK, UPPER_H1, PAGE, CONTENT_W, BODY_PT
     BRAND = load_brand(spec)
+    PAGE = spec.get("page", "a4")
+    CONTENT_W = content_width(PAGE)
+    BODY_PT = spec.get("body_pt", DEFAULT_BODY_PT)
+    # A simple document is one section that starts at page 1: no cover, no
+    # control page, no roman front matter, and generated lists off unless asked.
+    simple = spec.get("layout", "formal") == "simple"
+    lists_on = not simple
+    UPPER_H1 = not simple
     validate(spec)
     labels = LABELS[spec.get("lang") or BRAND["lang"]]
     meta = dict(META_DEFAULTS)
     meta.update({k: v for k, v in spec.items() if k in META_DEFAULTS})
     meta["_labels"] = labels
+    meta["_simple"] = simple
     meta["title"] = meta["title"] or labels["document_type"]
     meta["document_type"] = meta["document_type"] or labels["document_type"]
     meta["classification"] = meta["classification"] or labels["classification_default"]
@@ -1580,12 +1639,6 @@ def build(spec, out_path, instructions=False):
     install_table_style(doc)
     set_theme_fonts(doc)
     auto_update_fields(doc)
-
-    # A simple document is one section that starts at page 1: no cover, no
-    # control page, no roman front matter, and generated lists off unless asked.
-    simple = spec.get("layout", "formal") == "simple"
-    lists_on = not simple
-    UPPER_H1 = not simple
 
     plan = plan_document(spec.get("sections", []),
                          labels["references_title"] if spec.get("references") else None)
@@ -1625,7 +1678,7 @@ def build(spec, out_path, instructions=False):
     if plan.tables and spec.get("list_of_tables", lists_on):
         build_caption_list(doc, plan.tables, labels["lot_title"],
                            labels["table"], page_break=not simple)
-    if abbreviations:
+    if abbreviations and spec.get("abbreviations_list", lists_on):
         build_abbreviations(doc, abbreviations, meta, page_break=not simple)
 
     if not simple:
@@ -1761,6 +1814,7 @@ def _selfcheck():
     """Smallest runnable check: both modes produce a valid, styled docx."""
     import contextlib
     import io as _io
+    import re
     import zipfile
     from docx import Document as _D
 
@@ -1801,10 +1855,6 @@ def _selfcheck():
         # the shipped example is documentation, and documentation drifts
         with open(EXAMPLE, encoding="utf-8") as fh:
             build(json.load(fh), os.path.join(tmp, "x.docx"))
-        for i, sib in enumerate(SIBLINGS):
-            if os.path.exists(sib):
-                with open(sib, encoding="utf-8") as fh:
-                    build(json.load(fh), os.path.join(tmp, "sib%d.docx" % i))
 
         for path in (t, r):
             names = {s.name for s in _D(path).styles}
@@ -1935,19 +1985,62 @@ def _selfcheck():
         fd = _D(flat)
         ftexts = [p.text for p in fd.paragraphs]
         assert len(fd.sections) == 1, "simple layout should be a single section"
-        assert ftexts[0] == "Check", ftexts[:3]           # title, no cover before it
+        assert ftexts[0] == "TIÊU ĐỀ: Check", ftexts[:3]   # title line, no cover
         assert "THÔNG TIN TÀI LIỆU" not in ftexts, "control page survived"
         assert "MỤC LỤC" not in ftexts, "contents should default off when flat"
         assert "One" in ftexts and "ONE" not in ftexts, "flat headings should not shout"
+        # the abbreviations banner used to land in the middle of a flat document
+        assert not any(t.isupper() and len(t) > 12 for t in ftexts), \
+            [t for t in ftexts if t.isupper() and len(t) > 12]
         assert fd.tables[0].cell(0, 0).text == "Ngày", fd.tables[0].cell(0, 0).text
+        # the header names the document and its programme, not its revision
+        fhdr = fd.sections[0].header.tables[0].rows[0].cells[1].text
+        assert "BÁO CÁO: X-1" in fhdr, fhdr
+        assert "Phiên bản" not in fhdr, fhdr
         with zipfile.ZipFile(flat) as z:
             fxml = z.read("word/document.xml").decode()
+            fstyles = z.read("word/styles.xml").decode()
             assert "<w:pageBreakBefore/>" not in fxml, "flat sections must not break"
             assert "<wp:anchor" not in fxml, "cover ground survived into a flat document"
             assert "lowerRoman" not in fxml, "flat documents number from 1"
             assert "SEQ Bảng" in fxml, "captions still number themselves when flat"
+            h1 = re.search(r'w:styleId="Heading1".*?</w:style>', fstyles, re.S).group(0)
+            assert "w:pBdr" not in h1, "the heading rule belongs to paged sections"
+        # the programme reaches the header when it is given
+        pj = _D(build(dict(spec, layout="simple", project="ALTA X"),
+                      os.path.join(tmp, "pj.docx")))
+        assert "Dự án: ALTA X" in pj.sections[0].header.tables[0].rows[0].cells[1].text
+
+        # Letter narrows the text column, and the widths must follow the page
+        lt = build(dict(spec, page="letter", sections=[{"heading": "S", "blocks": [
+            {"type": "table", "header": ["A", "B"], "rows": [["1", "2"]],
+             "widths": [4405, 5000]}]}]), os.path.join(tmp, "lt.docx"))
+        assert abs(_D(lt).sections[0].page_width - Cm(21.59)) < 2000, "not Letter"
+        assert content_width("letter") == 9405, content_width("letter")
+        assert content_width("a4") == 9638, content_width("a4")
+        try:
+            build(dict(spec, page="letter", sections=[{"heading": "S", "blocks": [
+                {"type": "table", "header": ["A"], "rows": [["1"]],
+                 "widths": [9638]}]}]), os.path.join(tmp, "lt2.docx"))
+            raise AssertionError("A4 widths were accepted on a Letter page")
+        except ValueError:
+            pass
+
+        # body_pt reaches the styles, and is refused outside a sane range
+        with zipfile.ZipFile(build(dict(spec, body_pt=11),
+                                   os.path.join(tmp, "bp.docx"))) as z:
+            nrm = re.search(r'w:styleId="Normal".*?</w:style>',
+                            z.read("word/styles.xml").decode(), re.S).group(0)
+            assert '<w:sz w:val="22"/>' in nrm, nrm
+        for bad_pt in (4, 30):
+            try:
+                validate(dict(spec, body_pt=bad_pt))
+                raise AssertionError("validate accepted body_pt=%r" % bad_pt)
+            except ValueError:
+                pass
         # the lists are off by default, not unavailable
-        assert "MỤC LỤC" in [p.text for p in
+        # ... and when one is asked for it gets a section head, not a banner
+        assert "Mục lục" in [p.text for p in
                              _D(build(dict(spec, layout="simple", toc=True),
                                       os.path.join(tmp, "flat2.docx"))).paragraphs]
         try:
@@ -2016,6 +2109,21 @@ def _selfcheck():
             raise AssertionError("validate accepted an unknown brand key")
         except ValueError:
             pass
+
+        # Sibling skills render through this script, and their JSON is
+        # documentation too. Built last: they set the globals for their own
+        # page, font and body size, and everything above reads the defaults.
+        for i, sib in enumerate(SIBLINGS):
+            assert os.path.exists(sib), sib
+            with open(sib, encoding="utf-8") as fh:
+                sspec = json.load(fh)
+            sdoc = _D(build(sspec, os.path.join(tmp, "sib%d.docx" % i)))
+            assert sdoc.paragraphs[0].text.startswith("TITLE: "), sib
+            hdr = sdoc.sections[0].header.tables[0].rows[0].cells[1].text
+            assert hdr.startswith("TEST DOCUMENT: "), (sib, hdr)
+            assert abs(sdoc.sections[0].page_width - Cm(21.59)) < 2000, sib
+            with zipfile.ZipFile(os.path.join(tmp, "sib%d.docx" % i)) as z:
+                assert "Arial" in z.read("word/styles.xml").decode(), sib
 
     print("selfcheck ok")
 

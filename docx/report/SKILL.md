@@ -117,9 +117,12 @@ Do **not** hand-edit the .docx afterwards – change the JSON and re-run.
 {
   "lang": "vi",
   "font": "Times New Roman",
+  "body_pt": 13,
+  "page": "a4",
   "document_type": "Báo cáo",
   "title": "Tích hợp Phase One P3",
   "object": "Phase One P3",
+  "project": "",
   "doc_no": "REP-2026-014",
   "version": "1.0",
   "date": "17/08/2026",
@@ -142,6 +145,14 @@ Do **not** hand-edit the .docx afterwards – change the JSON and re-run.
   ]
 }
 ```
+
+`page` is `a4` (default) or `letter`. It sets the sheet, the margins **and the
+width a table's `widths` must add up to** — 9638 twips on A4, 9405 on Letter. A
+widths list from one page size is refused on the other rather than overflowing.
+
+`body_pt` is the body size, 8 to 14, default 13. Thirteen suits Times New Roman
+under the Vietnamese convention; 11 suits Arial. It scales the body, bullets,
+quotes and table text together — headings keep their own scale.
 
 `font` sets the typeface for the whole document – styles, theme and tables. It
 only accepts fonts Office installs on both Windows and macOS:
@@ -170,8 +181,12 @@ every top-level section.
 `"layout": "simple"` drops all of it. The document opens with the title, the
 author, `tested_by` if set, and the revision table, then goes straight into
 section 1. One section, page numbers from 1, sections flow without a page break,
-level-1 headings keep their sentence case, and the contents and figure/table
-lists default to off — pass `"toc": true` to bring one back. The styles,
+level-1 headings keep their sentence case and lose the rule beneath them, the
+title is set at heading weight with a `TITLE:` prefix rather than at cover size,
+and the contents, figure/table lists and abbreviations default to off — pass
+`"toc": true` or `"abbreviations_list": true` to bring one back. A generated list
+that is switched back on gets a plain section head, not the centred banner the
+formal front matter uses. The styles,
 branding, header, footer, auto-numbered headings and `SEQ` captions are
 unchanged, so a flat document is the same template, not a different one.
 
@@ -179,8 +194,14 @@ Use it for anything read at a bench rather than filed: see the
 [`docx-test`](../test/SKILL.md) skill, which is this renderer with the simple
 layout and a fixed seven-section skeleton.
 
+In the simple layout the header stops carrying the revision and carries what a
+bench document is filed by instead: `DOCUMENT TYPE: doc_no` on the first line and
+`Project Reference: project` on the second. The footer is unchanged — logo in the
+header, company and page number in the footer, both from the brand.
+
 `tested_by` names whoever ran a test, which is often not whoever wrote the
-document up. Left empty it prints nowhere.
+document up. `project` is the programme the document belongs to. Left empty,
+both print nowhere.
 
 ### Sections
 

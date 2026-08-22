@@ -1,141 +1,139 @@
 {
   "layout": "simple",
+  "page": "letter",
+  "font": "Arial",
+  "body_pt": 11,
   "lang": "en",
-  "document_type": "Test Report",
+  "document_type": "Test Document",
   "title": "E7000 Motor/ESC Qualification",
   "object": "E7000 motor and ESC set",
-  "doc_no": "EV1-26",
+  "doc_no": "TD-EV1-26",
+  "project": "ALTA X",
   "version": "1.1",
   "date": "21/08/2026",
-  "prepared_by": "Quan Tran – Test Engineering",
+  "prepared_by": "Quan Tran",
   "tested_by": "Quan Tran, Minh Le",
+  "classification": "Company Confidential",
   "revisions": [
-    ["1.0", "14/05/2026", "Initial release", "QT"],
-    ["1.1", "21/08/2026", "Added production adapter results and the burn-in recommendation", "QT"]
+    ["1.0", "14/05/2026", "Initial", "QT"],
+    ["1.1", "21/08/2026", "Production adapter results, burn-in recommendation", "QT"]
   ],
   "sections": [
     {
       "heading": "Purpose of Testing",
       "blocks": [
-        {"type": "para", "text": "This test qualifies the E7000 motor and ESC combination for use on the AltaX airframe. It answers two questions: whether the combination holds its rated performance across the operating envelope, and where the thermal limit sits under sustained high load."},
-        {"type": "para", "text": "The deliverable is a burn-in procedure for the arm assemblies, together with the power curve used by the flight-time model."}
+        {"type": "para", "text": "Verify the performance and reliability of the E7000 motor/ESC combo for AltaX, and establish the thermal limit under sustained load."},
+        {"type": "para", "text": "An output of this test is a burn-in procedure for the arms."}
       ]
     },
     {
       "heading": "System Configuration",
       "blocks": [
-        {"type": "para", "text": "The unit under test is one complete arm assembly: motor, ESC and propeller adapter, mounted on the bench fixture with the production wiring loom."},
-        {"type": "kv", "label_width": 3200, "rows": [
-          ["Motor", "DJI E7000, P/N 3-2007-041"],
-          ["ESC", "DJI E7000 ESC, hardware rev C, heatsink fitted"],
-          ["Firmware", "ESC 1.4.2, released 02/2026"],
+        {"type": "kv", "label_width": 3000, "rows": [
+          ["Motor / ESC", "DJI E7000 set, ESC hardware rev C, heatsink fitted"],
+          ["Firmware", "ESC 1.4.2"],
           ["Propeller", "AltaX 32 in carbon, two blade"],
-          ["Supply", "Regulated 52.0 V DC, 200 A capable"],
-          ["Instrumentation", "Hall current probes on input and one phase, 1 kHz log; optical RPM; type-K on the ESC case"],
-          ["Ambient", "23 °C ± 2 °C unless a test states otherwise"]
-        ]},
-        {"type": "figure", "placeholder": "[ insert bench fixture photograph ]", "caption": "Arm assembly on the bench fixture, instrumented"}
+          ["Supply", "52.0 V DC regulated, 200 A"],
+          ["Instrumentation", "Hall probes on input and one phase at 1 kHz, optical RPM, type-K on ESC case"],
+          ["Ambient", "23 °C ± 2 °C"]
+        ]}
       ]
     },
     {
       "heading": "Items to be Tested / Not Tested",
       "blocks": [
         {"type": "table",
-         "caption": "Test scope and ownership",
+         "caption": "Test scope",
          "header": ["Item to Test", "Test Overview", "Responsibility"],
-         "widths": [2600, 5038, 2000],
+         "widths": [2500, 4905, 2000],
          "rows": [
-           ["Characterisation", "Power, RPM and current against PWM over the full range", "Test Engineering"],
-           ["Step response", "Acceleration and deceleration between 1150 and 1950 µs PWM", "Test Engineering"],
-           ["Arm/disarm cycling", "500 arm and disarm cycles, watching for start-up faults", "Test Engineering"],
-           ["High load", "Sustained load at the thermal limit until failure or 30 min", "Test Engineering"],
-           ["Temperature extremes", "Full suite at −20 °C and +40 °C", "Environmental lab"]
+           ["Characterisation", "Power, RPM and current against PWM, full range", "Test Eng."],
+           ["Step response", "Acceleration and deceleration, 1150 to 1950 µs", "Test Eng."],
+           ["Arm/disarm", "500 arm and disarm cycles", "Test Eng."],
+           ["High load", "Sustained load to failure or 30 min", "Test Eng."],
+           ["Temperature", "Full suite at −20 °C and +40 °C", "Env. lab"]
          ]},
-        {"type": "para", "text": "Vibration, altitude and salt fog are **not** covered here: they are airframe-level qualifications run under EV1-62, and repeating them at component level would not change the acceptance decision. Propeller balance is also out of scope – the adapter is qualified separately in EV1-41."}
+        {"type": "para", "text": "Not tested: vibration, altitude and salt fog – airframe-level qualifications covered by EV1-62. Propeller balance – covered by EV1-41."}
       ]
     },
     {
       "heading": "Test Approach",
       "blocks": [
-        {"type": "para", "text": "Each test drives the ESC from a signal generator through the production loom, with the arm fixed to the bench. The following quantities are logged for every run:"},
+        {"type": "para", "text": "Measured on every run:"},
         {"type": "bullets", "items": [
-          "Input current and input voltage at the ESC terminals",
-          "Phase current on one phase",
-          "Commanded PWM, in microseconds",
+          "Input current and voltage at the ESC terminals",
+          "Phase current, one phase",
+          "Commanded PWM",
           "RPM, optical",
-          "ESC case temperature, type-K on the FET side"
+          "ESC case temperature"
         ]},
-        {"type": "para", "text": "Throttle is expressed as PWM in microseconds throughout, where 1300 µs is idle and 1920 µs is maximum. Runs use one of three stimulus waveforms."},
         {"type": "table",
          "caption": "Stimulus waveforms",
          "header": ["Name", "Purpose", "Definition"],
-         "widths": [2000, 4638, 3000],
+         "widths": [2000, 4405, 3000],
          "rows": [
-           ["Pyramid", "Steady-state measurements at every throttle point", "Ramp 1300 → 1920 → 1300 µs in 50 µs steps, 5 s dwell per step"],
-           ["Step", "Acceleration and deceleration response", "Steps between 1150, 1650 and 1950 µs, 10 s dwell"],
-           ["High load", "Sustained load at the thermal limit", "1850 µs held for 30 min or until failure"]
+           ["Pyramid", "Steady-state measurement at each throttle point", "1300 → 1920 → 1300 µs, 50 µs steps, 5 s dwell"],
+           ["Step", "Acceleration and deceleration response", "1150 / 1650 / 1950 µs, 10 s dwell"],
+           ["High load", "Sustained load at the thermal limit", "1850 µs for 30 min or until failure"]
          ]},
-        {"type": "para", "text": "Runs start from a cold ESC, defined as case temperature within 3 °C of ambient. A run is discarded if the supply sags below 50.0 V at any point."}
+        {"type": "para", "text": "0 % is idle throttle at 1300 µs PWM, 100 % is 1920 µs. Runs start with the ESC case within 3 °C of ambient, and are discarded if the supply drops below 50.0 V."}
       ]
     },
     {
       "heading": "Test PASS / FAIL Criteria",
       "blocks": [
-        {"type": "para", "text": "Criteria are itemised per test in Table 1 and repeated with the outcome in Table 3. Characterisation and step response are measurements rather than judgements and carry no pass criterion."}
+        {"type": "para", "text": "Itemised per test in Table 1, with the outcome in Table 3. Characterisation and step response are measurements and carry no criterion."}
       ]
     },
     {
       "heading": "Test Results",
-      "blocks": [
-        {"type": "para", "text": "All runs used firmware 1.4.2. Raw logs are attached to the test record; the figures below are the reduced data."}
-      ],
+      "blocks": [],
       "sections": [
         {
           "heading": "ESC Characterisation",
           "blocks": [
-            {"type": "para", "text": "Using the pyramid waveform, input power follows PWM closely enough to be modelled by a single cubic over the whole range, with a residual under 2 % between 1400 and 1900 µs:"},
+            {"type": "para", "text": "Input power against PWM fits a single cubic within 2 % between 1400 and 1900 µs. Peak was 4031 W at 77.5 A and 5180 RPM, at 1920 µs and 52.0 V."},
             {"type": "equation", "text": "P = 3.1854e−06 · t³ − 5.8785e−03 · t² − 0.57551 · t + 4031"},
-            {"type": "para", "text": "P is input power in watts and t is commanded PWM in microseconds, valid from 1300 to 1920 µs at 52.0 V and 23 °C. Peak input power at 1920 µs was 4031 W drawing 77.5 A, at 5180 RPM."},
-            {"type": "figure", "placeholder": "[ insert PWM against RPM and input power plot ]", "caption": "Input power and RPM against commanded PWM, pyramid waveform"}
+            {"type": "para", "text": "P in watts, t in microseconds, valid 1300 to 1920 µs."},
+            {"type": "figure", "placeholder": "[ insert PWM against RPM and power plot ]", "caption": "Input power and RPM against PWM, pyramid waveform"}
           ]
         },
         {
           "heading": "Step Response",
           "blocks": [
-            {"type": "para", "text": "Acceleration from 1150 to 1950 µs settles to within 2 % of the commanded RPM in 410 ms. Deceleration from 1950 to 1150 µs takes 1.28 s, dominated by the propeller inertia rather than the ESC – phase current falls to zero within 40 ms of the command."},
-            {"type": "figure", "placeholder": "[ insert step response trace ]", "caption": "Step response, 1150 → 1950 → 1150 µs PWM"}
+            {"type": "para", "text": "Acceleration 1150 → 1950 µs settles within 2 % in 410 ms. Deceleration takes 1.28 s, set by propeller inertia – phase current reaches zero within 40 ms of the command."},
+            {"type": "figure", "placeholder": "[ insert step response trace ]", "caption": "Step response, 1150 → 1950 → 1150 µs"}
           ]
         },
         {
           "heading": "Arm/Disarm Cycling",
           "blocks": [
-            {"type": "para", "text": "An Arduino drove alternating 900 µs and 1300 µs commands to arm and disarm the ESC, with input and phase current logged throughout. The goal was to catch a start-up fault that only appears over many cycles."},
-            {"type": "para", "text": "The sequence ran 500 cycles with no interruption. Every start-up showed the same current signature, and no cycle showed the synchronisation loss seen on the pre-production adapter."}
+            {"type": "para", "text": "500 cycles of 900 µs and 1300 µs, input and phase current logged. No interruption, every start-up showed the same current signature."}
           ]
         },
         {
-          "heading": "Failure during high-load testing",
+          "heading": "Failure during characterisation",
           "blocks": [
-            {"type": "para", "text": "The first high-load run ended in failure 25 s into the 1850 µs hold. Input current collapsed from 71 A to zero within one log sample and the motor stopped; ESC case temperature at the last good sample was 106 °C."},
-            {"type": "para", "text": "The ESC used in that run was a bare board wrapped in heatshrink, with no heatsink and no airflow. Dissection showed at least one failed FET on the phase carrying the highest current, with the surrounding potting discoloured."},
-            {"type": "para", "text": "Root cause is thermal, not electrical: the part was run outside its cooling configuration. The run was repeated with the production heatsink and 2 m/s of airflow, and completed the full 30 min with the case stabilising at 78 °C. Bare-board operation at sustained high load is therefore excluded, and the burn-in procedure requires the heatsink fitted."}
+            {"type": "para", "text": "The first high-load run failed 25 s into the 1850 µs hold: input current collapsed from 71 A to zero in one sample, case temperature 106 °C at the last good sample. Dissection showed at least one failed FET."},
+            {"type": "para", "text": "Root cause: thermal. The ESC was a bare board in heatshrink with no heatsink and no airflow, run outside its cooling configuration."},
+            {"type": "para", "text": "Action: repeated with the production heatsink and 2 m/s airflow – completed 30 min, case stable at 78 °C. Bare-board operation at sustained high load is excluded, and the burn-in procedure requires the heatsink fitted."}
           ]
         },
         {
           "heading": "Summary",
           "blocks": [
             {"type": "table",
-             "caption": "Test results against the acceptance criteria",
+             "caption": "Results against the acceptance criteria",
              "header": ["Test Name", "Test Description", "Pass Criteria", "Result"],
-             "widths": [2000, 3438, 2200, 2000],
+             "widths": [1900, 3305, 2200, 2000],
              "rows": [
-               ["Characterisation", "Pyramid waveform over the full PWM range", "None, characterisation only", "Complete"],
-               ["Step response", "Steps between 1150 and 1950 µs PWM", "None, characterisation only", "Complete"],
-               ["Arm/disarm cycling", "500 arm and disarm cycles", "No start-up fault in 500 cycles", "PASS"],
-               ["High load, bare board", "1850 µs held for 30 min, no heatsink", "Completes 30 min", "FAIL – FET failure at 25 s"],
-               ["High load, production", "1850 µs held for 30 min, heatsink and airflow", "Completes 30 min, case below 90 °C", "PASS – 78 °C stable"],
-               ["Low temperature", "Full suite at −20 °C", "Suite completes, minimum thrust met", "Not tested – moved to EV1-62"],
-               ["High temperature", "Full suite at +40 °C", "Suite completes, case below 90 °C", "Not tested – moved to EV1-62"]
+               ["Characterisation", "Pyramid, full PWM range", "None, characterisation", "Complete"],
+               ["Step response", "Steps 1150 to 1950 µs", "None, characterisation", "Complete"],
+               ["Arm/disarm", "500 cycles", "No start-up fault", "PASS"],
+               ["High load, bare board", "1850 µs, 30 min, no heatsink", "Completes 30 min", "FAIL – FET at 25 s"],
+               ["High load, production", "1850 µs, 30 min, heatsink and airflow", "30 min, case under 90 °C", "PASS – 78 °C"],
+               ["Low temp", "Full suite at −20 °C", "Suite completes, min thrust met", "Moved to EV1-62"],
+               ["High temp", "Full suite at +40 °C", "Suite completes, case under 90 °C", "Moved to EV1-62"]
              ]}
           ]
         }
@@ -144,12 +142,12 @@
     {
       "heading": "Conclusions/Recommendations",
       "blocks": [
-        {"type": "para", "text": "The E7000 motor and ESC combination is qualified for AltaX in the production cooling configuration. It is not qualified for bare-board operation at sustained high load, which failed at 25 s."},
+        {"type": "para", "text": "The E7000 motor and ESC perform satisfactorily for use in AltaX in the production cooling configuration. Not qualified for bare-board operation at sustained high load."},
         {"type": "bullets", "items": [
-          "Release the burn-in procedure in Appendix A of EV1-26-P: 1850 µs for 30 min with the heatsink fitted, case temperature logged, reject above 90 °C.",
-          "Use the cubic in section 6.1 for the flight-time model rather than the supplier curve, which overstates power below 1500 µs by up to 9 %.",
-          "Temperature extremes remain open and are tracked under EV1-62, owned by the environmental lab. The qualification is conditional on that suite passing.",
-          "Repeat arm/disarm cycling once the production adapter reaches revision D – the 500 cycles here used revision C."
+          "Release the burn-in procedure: 1850 µs for 30 min, heatsink fitted, reject above 90 °C case.",
+          "Use the cubic in section 6.1 for the flight-time model – the supplier curve overstates power below 1500 µs by up to 9 %.",
+          "Temperature extremes open under EV1-62, owned by the environmental lab. Qualification is conditional on that suite passing.",
+          "Repeat arm/disarm cycling on adapter revision D."
         ]}
       ]
     }

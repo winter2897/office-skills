@@ -118,7 +118,6 @@ Do **not** hand-edit the .docx afterwards – change the JSON and re-run.
   "lang": "vi",
   "font": "Times New Roman",
   "body_pt": 13,
-  "page": "a4",
   "document_type": "Báo cáo",
   "title": "Tích hợp Phase One P3",
   "object": "Phase One P3",
@@ -145,10 +144,6 @@ Do **not** hand-edit the .docx afterwards – change the JSON and re-run.
   ]
 }
 ```
-
-`page` is `a4` (default) or `letter`. It sets the sheet, the margins **and the
-width a table's `widths` must add up to** — 9638 twips on A4, 9405 on Letter. A
-widths list from one page size is refused on the other rather than overflowing.
 
 `body_pt` is the body size, 8 to 14, default 13. Thirteen suits Times New Roman
 under the Vietnamese convention; 11 suits Arial. It scales the body, bullets,

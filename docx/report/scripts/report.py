@@ -105,24 +105,7 @@ BRAND_DEFAULTS = {
 BRAND = dict(BRAND_DEFAULTS)   # per document; build() reloads it
 UPPER_H1 = True                # formal layout shouts level 1; simple does not
 
-# width, height, left, right, top, bottom - centimetres. The generous A4 top
-# margin leaves room for the logo header; Letter keeps the 1 in margins its
-# documents are written to.
-PAGES = {
-    "a4":     (21.0, 29.7, 2.0, 2.0, 3.5, 2.5),
-    "letter": (21.59, 27.94, 2.5, 2.5, 2.5, 2.5),
-}
-PAGE = "a4"       # per document; "page" in content.json overrides it
-TWIPS_PER_CM = 1440 / 2.54
-
-
-def content_width(page):
-    """Twips between the margins - what a table's widths must add up to."""
-    w, _, left, right, _, _ = PAGES[page]
-    return int(round((w - left - right) * TWIPS_PER_CM))
-
-
-CONTENT_W = content_width(PAGE)   # rebuilt by build() from the page
+CONTENT_W = 9638  # twips, A4 minus 2cm margins each side
 XML_SPACE = "{http://www.w3.org/XML/1998/namespace}space"
 
 # Fixed document furniture. Report prose is Vietnamese by default; set
@@ -764,11 +747,10 @@ def auto_update_fields(doc):
 
 # --------------------------------------------------------------------------- page furniture
 def setup_page(section):
-    w, h, left, right, top, bottom = PAGES[PAGE]
-    section.page_width, section.page_height = Cm(w), Cm(h)
-    section.left_margin, section.right_margin = Cm(left), Cm(right)
-    section.top_margin = Cm(top)
-    section.bottom_margin = Cm(bottom)
+    section.page_width, section.page_height = Cm(21), Cm(29.7)
+    section.left_margin = section.right_margin = Cm(2)
+    section.top_margin = Cm(3.5)      # room for the logo header
+    section.bottom_margin = Cm(2.5)
     section.header_distance = Cm(1.25)
     section.footer_distance = Cm(1.25)
     return section
@@ -1509,7 +1491,7 @@ META_DEFAULTS = {
 
 # Every key the schema knows. A typo used to be dropped without a word and
 # print as an empty field halfway down page i.
-SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "body_pt", "page", "brand",
+SPEC_KEYS = set(META_DEFAULTS) | {"lang", "font", "body_pt", "brand",
                                   "layout", "toc", "list_of_figures",
                                   "abbreviations_list",
                                   "list_of_tables", "abbreviations", "references",
@@ -1550,8 +1532,6 @@ def validate(spec):
         bad("lang must be one of: %s", ", ".join(sorted(LABELS)))
     if spec.get("layout", "formal") not in ("formal", "simple"):
         bad("layout must be 'formal' or 'simple', got %r", spec["layout"])
-    if spec.get("page", "a4") not in PAGES:
-        bad("page must be one of: %s", ", ".join(sorted(PAGES)))
     if not 8 <= spec.get("body_pt", BODY_PT) <= 14:
         bad("body_pt must be between 8 and 14, got %r", spec["body_pt"])
     pick_font(spec.get("font") or BRAND["font"])   # raises on a font Word may lack
@@ -1609,10 +1589,8 @@ def validate(spec):
 def build(spec, out_path, instructions=False):
     # ponytail: module globals, not parameters threaded through forty calls.
     # One document per process in every real use; selfcheck sets them per build.
-    global FONT, BRAND, INK, UPPER_H1, PAGE, CONTENT_W, BODY_PT
+    global FONT, BRAND, INK, UPPER_H1, BODY_PT
     BRAND = load_brand(spec)
-    PAGE = spec.get("page", "a4")
-    CONTENT_W = content_width(PAGE)
     BODY_PT = spec.get("body_pt", DEFAULT_BODY_PT)
     # A simple document is one section that starts at page 1: no cover, no
     # control page, no roman front matter, and generated lists off unless asked.
@@ -2011,21 +1989,6 @@ def _selfcheck():
                       os.path.join(tmp, "pj.docx")))
         assert "Dự án: ALTA X" in pj.sections[0].header.tables[0].rows[0].cells[1].text
 
-        # Letter narrows the text column, and the widths must follow the page
-        lt = build(dict(spec, page="letter", sections=[{"heading": "S", "blocks": [
-            {"type": "table", "header": ["A", "B"], "rows": [["1", "2"]],
-             "widths": [4405, 5000]}]}]), os.path.join(tmp, "lt.docx"))
-        assert abs(_D(lt).sections[0].page_width - Cm(21.59)) < 2000, "not Letter"
-        assert content_width("letter") == 9405, content_width("letter")
-        assert content_width("a4") == 9638, content_width("a4")
-        try:
-            build(dict(spec, page="letter", sections=[{"heading": "S", "blocks": [
-                {"type": "table", "header": ["A"], "rows": [["1"]],
-                 "widths": [9638]}]}]), os.path.join(tmp, "lt2.docx"))
-            raise AssertionError("A4 widths were accepted on a Letter page")
-        except ValueError:
-            pass
-
         # body_pt reaches the styles, and is refused outside a sane range
         with zipfile.ZipFile(build(dict(spec, body_pt=11),
                                    os.path.join(tmp, "bp.docx"))) as z:
@@ -2121,7 +2084,6 @@ def _selfcheck():
             assert sdoc.paragraphs[0].text.startswith("TITLE: "), sib
             hdr = sdoc.sections[0].header.tables[0].rows[0].cells[1].text
             assert hdr.startswith("TEST DOCUMENT: "), (sib, hdr)
-            assert abs(sdoc.sections[0].page_width - Cm(21.0)) < 2000, sib
             with zipfile.ZipFile(os.path.join(tmp, "sib%d.docx" % i)) as z:
                 assert "Arial" in z.read("word/styles.xml").decode(), sib
 

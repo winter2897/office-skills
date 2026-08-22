@@ -27,7 +27,6 @@ test document does differently.
 ```json
 {
   "layout": "simple",
-  "page": "a4",
   "font": "Arial",
   "body_pt": 11,
   "document_type": "Test Document",
@@ -44,7 +43,7 @@ test document does differently.
 | Key | Why |
 |---|---|
 | `"layout": "simple"` | **Required.** No cover, no control page, no roman front matter; sections do not each start a page; headings keep sentence case and lose the rule under them; the title is set at heading weight with a `TITLE:` prefix; contents and figure/table lists default off |
-| `"font": "Arial"`, `"body_pt": 11` | **The defaults for this skill.** A test document is Arial 11 pt, not the Times New Roman 13 pt a formal report uses. `"page": "a4"` is the default and is carried explicitly so a test document does not silently change sheet |
+| `"font": "Arial"`, `"body_pt": 11` | **The defaults for this skill.** A test document is Arial 11 pt, not the Times New Roman 13 pt a formal report uses |
 | `document_type` | Prints in the header as `TEST DOCUMENT: <doc_no>`. Keep it `Test Document` |
 | `project` | Prints in the header as `Project Reference: <project>` |
 | `tested_by` | Who ran the test, which is often not who wrote it up |

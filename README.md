@@ -9,11 +9,11 @@ Document skills for AI coding agents. Plug into your favorite AI coding tool and
 | Skill | Description | Status |
 |-------|-------------|--------|
 | `docx/report` | Technical, integration and feasibility reports as `.docx`. Cover page, document-control table, revision history, auto-numbered headings, table of contents, list of figures and tables, `SEQ`-numbered figure / table / listing captions, abbreviations, references, styled tables, running header and footer. Writes Vietnamese or English from the same schema. | Available |
-| `docx/test` | Test reports, qualification reports and test records. The seven-section engineering structure — purpose, system configuration, items tested / not tested, approach, PASS/FAIL criteria, results, conclusions. Flat layout: no cover, no contents list, straight into section 1, the way a bench document is read. | Available |
+| `docx/test` | Test reports, qualification reports, test records and test-step procedures. The seven-section engineering structure — purpose, system configuration, items tested / not tested, approach, PASS/FAIL criteria, results, conclusions. Flat layout in Arial 11 pt: no cover, no contents list, straight into section 1, the way a bench document is read. | Available |
 | `docx/sop` | Standard operating procedures. | Planned |
 | `docx/manual` | User and maintenance manuals. | Planned |
 | `docx/plan` | Project and test plans. | Planned |
-| `docx/record` | Test records and inspection sheets. | Planned |
+| `docx/record` | Inspection and acceptance records. | Planned |
 | `docx/specs` | Requirement and interface specifications. | Planned |
 
 Every skill reads the same branding, so a company sets its logo once and each
@@ -119,18 +119,24 @@ the agent composes the JSON and renders it. The report skill writes in the
 language you prompt in, so a Vietnamese prompt gives a Vietnamese report unless
 you ask for another one.
 
-By hand:
+By hand, from a clone of the repository:
 
 ```bash
-S=~/.office-skills/docx/report/scripts/report.py
+S=office-skills/docx/report/scripts/report.py
 
-python3 "$S" template out.docx             # blank template full of {{PLACEHOLDER}}
-python3 "$S" write content.json out.docx   # finished document
-python3 "$S" selfcheck                     # verify the script still works
+python3 "$S" template out.docx                          # blank report template
+python3 "$S" write content.json out.docx                # finished document
+python3 "$S" write office-skills/docx/test/skeleton.json test.docx   # blank test report
+python3 "$S" selfcheck                                  # verify the script still works
 ```
 
-Schema and writing rules: [`docx/report/SKILL.md`](docx/report/SKILL.md).
-A full worked example: [`docx/report/example.json`](docx/report/example.json).
+One script renders both skills; which document you get is decided by the JSON,
+not by the command.
+
+| Skill | Schema and writing rules | Worked example |
+|---|---|---|
+| `docx/report` | [`SKILL.md`](docx/report/SKILL.md) | [`example.json`](docx/report/example.json) |
+| `docx/test` | [`SKILL.md`](docx/test/SKILL.md) | [`example.json`](docx/test/example.json), [`skeleton.json`](docx/test/skeleton.json) |
 
 ## How it works
 
@@ -167,7 +173,11 @@ A new skill is a directory with a `SKILL.md` under its format group, plus one
 line in the `skills` array of [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json)
 so it ships with the bundle. Prefer reusing an existing renderer over adding a
 second one, the way `docx/test` does — a skill can be nothing but a `SKILL.md`
-and a worked example. The path is listed explicitly rather than scanning
+and a worked example.
+
+**Bump the version in both `.claude-plugin/plugin.json` and
+`.claude-plugin/marketplace.json`.** The plugin cache is keyed by version, so an
+install pinned at the old one will not see the new skill. The path is listed explicitly rather than scanning
 the group, because that is what makes the `name:` in the skill's frontmatter the
 name it is invoked by.
 

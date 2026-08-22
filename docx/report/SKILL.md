@@ -177,7 +177,7 @@ every top-level section.
 author, `tested_by` if set, and the revision table, then goes straight into
 section 1. One section, page numbers from 1, sections flow without a page break,
 level-1 headings keep their sentence case and lose the rule beneath them, the
-title is set at heading weight with a `TITLE:` prefix rather than at cover size,
+the title is centred a size above the headings rather than set at cover size,
 and the contents, figure/table lists and abbreviations default to off — pass
 `"toc": true` or `"abbreviations_list": true` to bring one back. A generated list
 that is switched back on gets a plain section head, not the centred banner the

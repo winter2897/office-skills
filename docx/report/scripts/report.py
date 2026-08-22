@@ -148,7 +148,6 @@ LABELS = {
         "hdr_doc_no": "Mã số",
         "hdr_rev": "Phiên bản",
         "project": "Dự án",
-        "title_prefix": "TIÊU ĐỀ",
     },
     "en": {
         "lang_tag": "en-US",
@@ -187,7 +186,6 @@ LABELS = {
         "hdr_doc_no": "Doc. No",
         "hdr_rev": "Rev",
         "project": "Project Reference",
-        "title_prefix": "TITLE",
     },
 }
 
@@ -1378,11 +1376,10 @@ def build_simple_head(doc, meta, revisions):
     ones the formal layout uses; only the furniture around them is gone.
     """
     L = meta["_labels"]
-    # Heading 1 weight, not the cover-sized Title style: the flat document opens
-    # on a line, not on a title page.
-    title = para(doc, "", before=0, after=10)
-    rich_text(title, "%s: %s" % (L["title_prefix"], meta["title"]),
-              bold=True, size=16)
+    # Centred and a size above the headings, but well under the cover Title:
+    # the flat document opens on a line, not on a title page.
+    title = para(doc, "", before=0, after=14, align=WD_ALIGN_PARAGRAPH.CENTER)
+    rich_text(title, meta["title"], bold=True, size=20)
     for label, value in ((L["prepared_by"], meta["prepared_by"]),
                          (L["tested_by"], meta["tested_by"]),
                          (L["date"], meta["date"]),
@@ -1963,7 +1960,7 @@ def _selfcheck():
         fd = _D(flat)
         ftexts = [p.text for p in fd.paragraphs]
         assert len(fd.sections) == 1, "simple layout should be a single section"
-        assert ftexts[0] == "TIÊU ĐỀ: Check", ftexts[:3]   # title line, no cover
+        assert ftexts[0] == "Check", ftexts[:3]           # title line, no cover
         assert "THÔNG TIN TÀI LIỆU" not in ftexts, "control page survived"
         assert "MỤC LỤC" not in ftexts, "contents should default off when flat"
         assert "One" in ftexts and "ONE" not in ftexts, "flat headings should not shout"
@@ -2081,7 +2078,7 @@ def _selfcheck():
             with open(sib, encoding="utf-8") as fh:
                 sspec = json.load(fh)
             sdoc = _D(build(sspec, os.path.join(tmp, "sib%d.docx" % i)))
-            assert sdoc.paragraphs[0].text.startswith("TITLE: "), sib
+            assert sdoc.paragraphs[0].text == sspec["title"], sib
             hdr = sdoc.sections[0].header.tables[0].rows[0].cells[1].text
             assert hdr.startswith("TEST DOCUMENT: "), (sib, hdr)
             with zipfile.ZipFile(os.path.join(tmp, "sib%d.docx" % i)) as z:

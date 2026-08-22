@@ -42,7 +42,7 @@ test document does differently.
 
 | Key | Why |
 |---|---|
-| `"layout": "simple"` | **Required.** No cover, no control page, no roman front matter; sections do not each start a page; headings keep sentence case and lose the rule under them; the title is set at heading weight with a `TITLE:` prefix; contents and figure/table lists default off |
+| `"layout": "simple"` | **Required.** No cover, no control page, no roman front matter; sections do not each start a page; headings keep sentence case and lose the rule under them; the title is centred a size above the headings; contents and figure/table lists default off |
 | `"font": "Arial"`, `"body_pt": 11` | **The defaults for this skill.** A test document is Arial 11 pt, not the Times New Roman 13 pt a formal report uses |
 | `document_type` | Prints in the header as `TEST DOCUMENT: <doc_no>`. Keep it `Test Document` |
 | `project` | Prints in the header as `Project Reference: <project>` |

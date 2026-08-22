@@ -66,11 +66,16 @@ A single report can override any of these without touching the file:
 
 Logos are **fitted inside their box, keeping the aspect ratio** – a square logo
 does not become 2.9 cm tall and inflate the header on every page. Give a PNG or
-JPEG; an SVG cannot be embedded in a .docx and falls back to the company name in
-text, with a warning on stderr. Also warned about: an image over 2000 px on its
-long side (the .docx carries every pixel it is given) and an aspect ratio outside
-8:1 … 1:3 (widen `logo_box_cm`). **Read stderr** – a report can render perfectly
-and still have lost its logo.
+JPEG.
+
+A logo the brand names and cannot place – **file missing, an SVG, or no
+`assets/` folder above the script** – **stops the render** with an error naming
+the path. It used to fall back to the company name in text, which is how
+documents went out looking finished with a wordmark where the logo belongs. If
+you genuinely have no logo, ask for that: `"logo": ""` and `"mark": ""` print the
+company name by design. Still only warnings: an image over 2000 px on its long
+side (the .docx carries every pixel it is given) and an aspect ratio outside
+8:1 … 1:3 (widen `logo_box_cm`).
 
 No `brand.json` found at all – the skill was copied out on its own – means brand
 defaults and the company name set in text where the logo would be. Nothing
@@ -334,6 +339,7 @@ fonts, the language tag, the caption fields, both generated lists, the
 roman-numeral front matter, the per-section page breaks, the bullet glyphs, that
 no two tables end up adjacent (Word merges those into one), that the spec
 validator rejects malformed JSON, that a brand override reaches the cover and the
-footer, that logos of any aspect ratio stay inside their box, that a missing or
-unreadable logo warns and falls back to text, that the cover ground carries the
+footer, that the header carries the logo in both layouts, that logos of any
+aspect ratio stay inside their box, that a missing or unreadable logo stops the
+render while `"logo": ""` falls back to text, that the cover ground carries the
 requested colour, that STYLEREF stays out, and that no em dash slipped in.

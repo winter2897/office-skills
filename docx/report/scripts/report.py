@@ -364,27 +364,37 @@ def solid_png(path, hex_color, w=210, h=297):
     return path
 
 
-def place_logo(paragraph, path, box_cm, where):
-    """Fit a logo inside box_cm keeping its aspect ratio. False if it cannot.
+def place_logo(paragraph, key, where):
+    """Fit the BRAND[key] image inside its box, keeping the aspect ratio.
 
     add_picture with a width alone lets Word derive the height, so a square
     logo becomes as tall as it is wide and inflates the header on every page
     of the document. Fit to a box instead, and let the narrow dimension bind.
+
+    False only when the brand deliberately has no such image (`"logo": ""`),
+    which is the caller's cue to print the company name instead. A logo the
+    brand *names* and cannot place stops the build: a stderr warning beside a
+    finished .docx is a warning nobody reads, and the document goes out
+    unbranded.
     """
     from docx.image.image import Image
+    name = BRAND.get(key)
+    if not name:
+        return False                       # deliberate: wordmark, no image
+    path, box_cm = brand_asset(key), BRAND[key + "_box_cm"]
     if not path:
-        sys.stderr.write("warning: no %s image - assets/brand.json was not found "
-                         "or names none\n" % where)
-        return False
+        raise ValueError(
+            '%s %r cannot be resolved: no assets/ folder above this script. '
+            'Copy the repo assets/ next to the skill, give an absolute path, '
+            'or set "%s": "" in the brand block to use the company name.'
+            % (where, name, key))
     if not os.path.exists(path):
-        sys.stderr.write("warning: %s image not found: %s\n" % (where, path))
-        return False
+        raise ValueError("%s image not found: %s" % (where, path))
     try:
         img = Image.from_file(path)
     except Exception as exc:               # SVG, a truncated file, anything
-        sys.stderr.write("warning: cannot read the %s image (%s: %s) - convert it "
-                         "to PNG or JPEG\n" % (where, os.path.basename(path), exc))
-        return False
+        raise ValueError("cannot read the %s image (%s: %s) - convert it to "
+                         "PNG or JPEG" % (where, os.path.basename(path), exc))
 
     if max(img.px_width, img.px_height) > 2000:
         sys.stderr.write("warning: %s is %dx%d px - downscale it, the .docx "
@@ -809,7 +819,7 @@ def build_header(section, meta):
 
     p = c0.paragraphs[0]
     p.paragraph_format.space_after = Pt(0)
-    if not place_logo(p, brand_asset("logo"), BRAND["logo_box_cm"], "header logo"):
+    if not place_logo(p, "logo", "header logo"):
         p.add_run(BRAND["company"]).bold = True
         set_size(p, 11, INK)
 
@@ -1365,7 +1375,7 @@ def build_cover(doc, meta):
     p = cover_cell(tbl.cell(2, 1), WD_ALIGN_VERTICAL.BOTTOM)
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     # the mark alone: the cover already carries the company name in the top left
-    place_logo(p, brand_asset("mark"), BRAND["mark_box_cm"], "cover mark")
+    place_logo(p, "mark", "cover mark")
 
 
 def build_simple_head(doc, meta, revisions):
@@ -1827,6 +1837,13 @@ def _selfcheck():
         t = build(placeholder_spec(), os.path.join(tmp, "t.docx"), instructions=True)
         r = build(spec, os.path.join(tmp, "r.docx"))
 
+        # the logo is in the header of every page, in both layouts
+        if ASSETS:
+            flat = build(dict(spec, layout="simple"), os.path.join(tmp, "s.docx"))
+            for path in (r, flat):
+                hdr = _D(path).sections[0].header._element.xml
+                assert "a:blip" in hdr, "the header lost its logo: %s" % path
+
         # the shipped example is documentation, and documentation drifts
         with open(EXAMPLE, encoding="utf-8") as fh:
             build(json.load(fh), os.path.join(tmp, "x.docx"))
@@ -2025,8 +2042,14 @@ def _selfcheck():
         # push the body down on every page
         def fitted(png, box):
             d0 = _D()
-            with contextlib.redirect_stderr(_io.StringIO()):   # the shapes warn on purpose
-                assert place_logo(d0.add_paragraph(), png, box, "test"), png
+            keep = dict(BRAND)
+            BRAND.update({"logo": png, "logo_box_cm": box})
+            try:
+                with contextlib.redirect_stderr(_io.StringIO()):   # the shapes warn on purpose
+                    assert place_logo(d0.add_paragraph(), "logo", "test"), png
+            finally:
+                BRAND.clear()
+                BRAND.update(keep)
             ext = d0.paragraphs[0].runs[0]._r.find(qn("w:drawing"))[0].extent
             return ext.cx, ext.cy
 
@@ -2041,17 +2064,22 @@ def _selfcheck():
         assert fitted(wide, box)[0] > fitted(tall, box)[0], \
             "a wide logo should bind on width, a tall one on height"
 
-        # an unreadable or missing logo warns and falls back to the company name
-        for bad_logo in ("", os.path.join(tmp, "nope.png"),
+        # a named logo that cannot be placed stops the build - the bug this
+        # guards is a document that looks finished with its name where the
+        # logo should be, and only a swallowed stderr line to say so
+        for bad_logo in (os.path.join(tmp, "nope.png"),
                          os.path.join(ASSETS or tmp, "logo-mark.svg")):
-            err = _io.StringIO()
-            with contextlib.redirect_stderr(err):
-                nd = _D(build(dict(spec, brand={"company": "NoLogo", "logo": bad_logo,
-                                                "mark": bad_logo}),
-                              os.path.join(tmp, "n.docx")))
-            assert "warning:" in err.getvalue(), (bad_logo, err.getvalue())
-            hdr = nd.sections[0].header.tables[0].rows[0].cells[0].text
-            assert hdr == "NoLogo", (bad_logo, hdr)
+            try:
+                build(dict(spec, brand={"logo": bad_logo, "mark": bad_logo}),
+                      os.path.join(tmp, "n.docx"))
+                raise AssertionError("unplaceable logo accepted: %s" % bad_logo)
+            except ValueError:
+                pass
+
+        # "" is the deliberate no-logo brand: the company name takes its place
+        nd = _D(build(dict(spec, brand={"company": "NoLogo", "logo": "", "mark": ""}),
+                      os.path.join(tmp, "n.docx")))
+        assert nd.sections[0].header.tables[0].rows[0].cells[0].text == "NoLogo"
 
         # the cover ground is generated from a hex colour, not shipped as a file
         import zlib

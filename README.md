@@ -56,10 +56,12 @@ Branding is organisation-wide, not per skill, so it lives once at the root in
 
 Logos are **fitted inside their box keeping the aspect ratio**, so a square logo
 does not become as tall as it is wide and inflate the header on every page.
-Anything unusable — missing file, SVG, an image over 2000 px, an aspect ratio
-outside 8:1 … 1:3 — warns on stderr, and an unreadable logo falls back to setting
-the company name in text rather than failing the render. Read stderr: a document
-can come out perfect and still have lost its logo.
+An oddity that still renders — an image over 2000 px, an aspect ratio outside
+8:1 … 1:3 — warns on stderr and carries on. A logo the brand *names* and cannot
+place — missing file, SVG, no `assets/` folder — **fails the render**, because a
+document that comes out perfect with the company name where the logo should be
+looks finished and is not branded. If you genuinely have no logo, say so with
+`"logo": ""` and the company name takes its place by design.
 
 A single document can override any brand key without touching the file:
 
